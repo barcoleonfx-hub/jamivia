@@ -50,7 +50,7 @@ input,select{font:inherit;padding:.6rem .9rem;border:1px solid var(--line);borde
 `;
 
 function shell(title, tab, body) {
-  const tabs = [["overview", "Overview"], ["orders", "Orders"], ["subscribers", "Waitlist"], ["trade", "Trade"], ["emails", "Emails"]];
+  const tabs = [["overview", "Overview"], ["orders", "Orders"], ["subscribers", "Waitlist"], ["trade", "Requests"], ["emails", "Emails"]];
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} · Jamivia Admin</title><meta name="robots" content="noindex">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Jost:wght@300;400&display=swap">
@@ -210,9 +210,14 @@ ${rows.map((s) => `<tr><td>${esc(s.email)}</td><td>${esc(s.first_name || "")}</t
 /* ---------------- trade ---------------- */
 async function trade() {
   const rows = await all("SELECT * FROM trade_leads ORDER BY created_at DESC LIMIT 500");
-  return `<div class="head"><h1>Trade enquiries</h1></div><section class="card">${rows.length
+  const certs = await all("SELECT * FROM cert_requests ORDER BY created_at DESC LIMIT 500");
+  return `<div class="head"><h1>Requests</h1></div><section class="grid2">
+  <div class="card"><h2>Trade enquiries</h2>${rows.length
     ? `<table><tr><th>Work email</th><th>Received</th></tr>${rows.map((r) => `<tr><td>${esc(r.email)}</td><td>${fmtDate(r.created_at)}</td></tr>`).join("")}</table>`
-    : `<p class="empty">No trade enquiries yet.</p>`}</section>`;
+    : `<p class="empty">No trade enquiries yet.</p>`}</div>
+  <div class="card"><h2>Certificate requests</h2>${certs.length
+    ? `<table><tr><th>Email</th><th>Batch</th><th>Received</th></tr>${certs.map((r) => `<tr><td>${esc(r.email)}</td><td>${esc(r.batch)}</td><td>${fmtDate(r.created_at)}</td></tr>`).join("")}</table>`
+    : `<p class="empty">No certificate requests yet.</p>`}</div></section>`;
 }
 
 /* ---------------- emails ---------------- */

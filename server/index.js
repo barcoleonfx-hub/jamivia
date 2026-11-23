@@ -25,7 +25,7 @@ if (!ADMIN_EMAIL || !ADMIN_HASH) console.warn("[jamivia] ADMIN_EMAIL / ADMIN_PAS
 /* ---------------- helpers ---------------- */
 const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".json": "application/json",
   ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".txt": "text/plain" };
-const PUBLIC = [/^\/$/, /^\/index\.html$/, /^\/img\/[\w.-]+$/, /^\/emails\/[\w.-]*$/, /^\/robots\.txt$/, /^\/favicon\.ico$/];
+const PUBLIC = [/^\/$/, /^\/(index|privacy)\.html$/, /^\/img\/[\w.-]+$/, /^\/emails\/[\w.-]*$/, /^\/assets\/[\w./-]+\.(css|js|json|svg|woff2|png|jpg|webp)$/, /^\/(robots\.txt|favicon\.ico|favicon\.svg|share\.jpg)$/];
 
 const BASE_HEADERS = { "X-Content-Type-Options": "nosniff", "Referrer-Policy": "strict-origin-when-cross-origin" };
 function sendRes(res, status, body, type = "text/plain; charset=utf-8", extra = {}) {
@@ -44,6 +44,14 @@ function readBody(req, limit = 20_000) {
   });
 }
 function parseJson(buf) { try { return JSON.parse(buf.toString("utf8") || "{}"); } catch { return null; } }
+// The site's forms post FormData (the kit's system.js); scripts post JSON. Accept both.
+async function parseAny(req, buf) {
+  const ct = req.headers["content-type"] || "";
+  if (/multipart\/form-data|application\/x-www-form-urlencoded/.test(ct)) {
+    try { return Object.fromEntries((await new Response(buf, { headers: { "content-type": ct } }).formData()).entries()); } catch { return null; }
+  }
+  return parseJson(buf);
+}
 function parseForm(buf) { return Object.fromEntries(new URLSearchParams(buf.toString("utf8"))); }
 
 const EMAIL_RE = /^[^\s@<>]{1,64}@[^\s@<>]{1,190}\.[a-z]{2,24}$/i;
@@ -110,10 +118,10 @@ async function handle(req, res) {
   /* ----- public API ----- */
   if (path === "/api/waitlist" && method === "POST") {
     if (limited(req, "wl", 10)) return json(res, 429, { error: "Too many attempts. Try again in a minute." });
-    const b = parseJson(await readBody(req));
+    const b = await parseAny(req, await readBody(req));
     const email = clean(b?.email, 254).toLowerCase(), firstName = clean(b?.firstName, 60), source = clean(b?.source, 60) || "website";
     if (!EMAIL_RE.test(email)) return json(res, 400, { error: "Enter a valid email address." });
-    if (b?.consent !== true) return json(res, 400, { error: "Consent is required to join the list." });
+    if (!(b?.consent === true || b?.consent === "yes" || b?.consent === "on")) return json(res, 400, { error: "Consent is required to join the list." });
     const existing = await one("SELECT * FROM subscribers WHERE email=?", [email]);
     const now = Date.now();
     if (!existing) {
@@ -131,10 +139,19 @@ async function handle(req, res) {
 
   if (path === "/api/trade" && method === "POST") {
     if (limited(req, "trade", 5)) return json(res, 429, { error: "Too many attempts. Try again in a minute." });
-    const b = parseJson(await readBody(req));
+    const b = await parseAny(req, await readBody(req));
     const email = clean(b?.email, 254).toLowerCase();
     if (!EMAIL_RE.test(email)) return json(res, 400, { error: "Enter a valid work email address." });
     await run("INSERT INTO trade_leads (email, created_at) VALUES (?,?)", [email, Date.now()]);
+    return json(res, 200, { ok: true });
+  }
+
+  if (path === "/api/certificate" && method === "POST") {
+    if (limited(req, "cert", 5)) return json(res, 429, { error: "Too many attempts. Try again in a minute." });
+    const b = await parseAny(req, await readBody(req));
+    const email = clean(b?.email, 254).toLowerCase(), batch = clean(b?.batch, 40);
+    if (!EMAIL_RE.test(email) || !batch) return json(res, 400, { error: "Enter the batch number and a valid email address." });
+    await run("INSERT INTO cert_requests (email, batch, created_at) VALUES (?,?,?)", [email, batch, Date.now()]);
     return json(res, 200, { ok: true });
   }
 
@@ -276,7 +293,10 @@ async function handle(req, res) {
       if (!st.isFile()) return sendRes(res, 404, "Not found");
       const type = TYPES[extname(file).toLowerCase()] || "application/octet-stream";
       const cache = p.startsWith("/img/") ? "public, max-age=604800" : "public, max-age=300";
-      return sendRes(res, 200, method === "HEAD" ? "" : await readFile(file), type, { "Cache-Control": cache });
+      let body = method === "HEAD" ? "" : await readFile(file);
+      // the live server marks the page, so its analytics only run where /api answers
+      if (p === "/index.html" && body) body = body.toString("utf8").replace("<head>", '<head>\n<meta name="jamivia-api" content="1">');
+      return sendRes(res, 200, body, type, { "Cache-Control": cache });
     } catch {
       if (path === "/robots.txt") return sendRes(res, 200, "User-agent: *\nDisallow: /admin\n");
       return sendRes(res, 404, "Not found");
