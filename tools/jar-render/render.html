@@ -178,52 +178,6 @@ if (SHOT === "forest"){
   jar.rotation.y = -0.32;
   cam.position.set(2.2, 1.9, 11); cam.lookAt(-0.2, 1.05, 0);
   scene.environmentIntensity = 0.5;
-} else if (SHOT === "lineup"){ // three jars, transparent, widest composition for the hero stage
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(60,60), new THREE.ShadowMaterial({opacity:.22}));
-  ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
-  const l = jar.clone(), r = jar.clone();
-  l.position.x = -2.35; l.rotation.y = 0.62; r.position.x = 2.35; r.rotation.y = -0.62;
-  l.position.z = r.position.z = -0.35; scene.add(l, r);
-  sun.position.set(3, 9, 6); sun.intensity = 2.4; scene.environmentIntensity = 0.75;
-  cam.fov = 9.5; cam.position.set(0, 1.45, 20); cam.lookAt(0, 1.18, 0);
-} else if (SHOT === "open" || SHOT === "openwide" || SHOT === "opentall"){ // lid off, powder visible, scoop beside: a parts close-up from above
-  scene.background = new THREE.Color(0xDAD3C7);
-  const slab = new THREE.Mesh(new THREE.PlaneGeometry(40,40), new THREE.MeshStandardMaterial({map:stoneTex("#D9D1C4"), roughness:.9}));
-  slab.material.map.repeat.set(4,4); slab.rotation.x = -Math.PI/2; slab.receiveShadow = true; scene.add(slab);
-  jar.remove(lid);
-  const powderTex = (() => { const c = document.createElement("canvas"); c.width = c.height = 512; const x = c.getContext("2d");
-    x.fillStyle = "#EFE9DC"; x.fillRect(0,0,512,512);
-    for (let i=0;i<26000;i++){ x.fillStyle = Math.random()<.5 ? "rgba(190,175,150,.18)" : "rgba(255,255,255,.35)"; x.fillRect(Math.random()*512, Math.random()*512, 1.4, 1.4); }
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
-  const powderMat = new THREE.MeshStandardMaterial({map:powderTex, roughness:1});
-  const mound = new THREE.Mesh(new THREE.SphereGeometry(0.93, 64, 24, 0, Math.PI*2, 0, Math.PI/2), powderMat);
-  mound.scale.set(1, 0.12, 1); mound.position.y = 1.86; mound.receiveShadow = true; jar.add(mound);
-  // the lid, upside down beside the jar
-  const lid2 = lid.clone(); lid2.material = lid.material.clone(); lid2.material.side = THREE.DoubleSide; lid2.rotation.x = Math.PI; lid2.position.set(2.35, 2.38, 0.6); scene.add(lid2);
-  // a bamboo scoop with a level scoop of powder
-  const bamboo = new THREE.MeshStandardMaterial({color:0xC9A878, roughness:.7});
-  const scoop = new THREE.Group();
-  const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.3, 0.42, 48, 1, true), bamboo); cup.material.side = THREE.DoubleSide;
-  const base = new THREE.Mesh(new THREE.CircleGeometry(0.3, 48), bamboo); base.rotation.x = -Math.PI/2; base.position.y = -0.21;
-  const fill = new THREE.Mesh(new THREE.CircleGeometry(0.335, 48), powderMat); fill.rotation.x = -Math.PI/2; fill.position.y = 0.19;
-  const handle = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.06, 0.16), bamboo); handle.position.set(0.95, 0.05, 0);
-  [cup, base, fill, handle].forEach(m => { m.castShadow = true; scoop.add(m); });
-  scoop.position.set(-1.9, 0.22, 1.1); scoop.rotation.y = 0.5; scene.add(scoop);
-    sun.position.set(-4, 9, 5); sun.intensity = 2.5; scene.environmentIntensity = 0.6;
-  if (SHOT === "openwide") { jar.position.x = 2.2; lid2.position.set(4.7, 2.38, 0.9); scoop.position.set(0.2, 0.22, 2.4); scoop.rotation.y = -0.4;
-    cam.fov = 30; cam.position.set(-0.6, 8.6, 7.4); cam.lookAt(-0.4, 0.6, 0.6); }
-  else if (SHOT === "opentall") { jar.position.set(0.3, 0, -0.4); lid2.position.set(1.4, 2.38, 3.1); scoop.position.set(-1.3, 0.22, 2.2); scoop.rotation.y = 0.9;
-    cam.fov = 36; cam.position.set(0, 10.5, 5.0); cam.lookAt(0, 0.4, -3.2); }
-  else { cam.fov = 26; cam.position.set(0.2, 8.4, 6.2); cam.lookAt(0.1, 1.0, 0.5); }
-} else if (SHOT === "panel"){ // the dose table panel, close
-  scene.background = new THREE.Color(0xDDD6CA);
-  const wall = new THREE.Mesh(new THREE.PlaneGeometry(60,30), new THREE.MeshStandardMaterial({color:0xDDD6CA, roughness:1}));
-  wall.position.set(0, 8, -4); wall.receiveShadow = true; scene.add(wall);
-  const slab = new THREE.Mesh(new THREE.PlaneGeometry(40,40), new THREE.MeshStandardMaterial({map:stoneTex("#D3CABB"), roughness:.9}));
-  slab.rotation.x = -Math.PI/2; slab.receiveShadow = true; scene.add(slab);
-  jar.rotation.y = -1.15;
-  sun.position.set(-5, 6, 6); sun.intensity = 2.3; scene.environmentIntensity = 0.6;
-  cam.fov = 24; cam.position.set(1.2, 1.5, 7.6); cam.lookAt(0.35, 1.05, 0);
 } else { // cutout: transparent background, soft contact shadow only
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(40,40), new THREE.ShadowMaterial({opacity:.28}));
   ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
