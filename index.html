@@ -18,6 +18,7 @@
   --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --maxw:1320px;
   --ease:cubic-bezier(.2,.7,.15,1);
+  --ease-out:cubic-bezier(.23,1,.32,1);
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --stone:#0F1713; --paper:#152019; --ink:#E7E4DA; --muted:#9FAAA2;
@@ -461,6 +462,37 @@ footer{background:var(--forest-deep);color:var(--on-forest-muted);padding-top:cl
 
 .toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,160%);background:var(--forest-deep);color:var(--on-forest);padding:.95rem 1.4rem;font-size:.88rem;border-radius:999px;border:1px solid rgba(205,176,122,.35);transition:transform .45s var(--ease);z-index:99;max-width:calc(100% - 32px);text-align:center}
 .toast.show{transform:translate(-50%,0)}
+
+/* ============ MOTION LAYER (look unchanged; feedback and transitions only) ============ */
+/* 1. press feedback */
+.btn,.nav .bag,.qty button,.units button,.seg button,.opt,.invite .x,.faq summary,.acc summary{-webkit-tap-highlight-color:transparent}
+.btn{transition:background .35s var(--ease),color .35s var(--ease),border-color .35s var(--ease),transform .16s var(--ease-out)}
+.nav .bag,.qty button,.units button,.opt,.invite .x{transition:transform .16s var(--ease-out),background .25s,color .25s,border-color .25s}
+.btn:active,.nav .bag:active,.qty button:active,.units button:active,.invite .x:active{transform:scale(.97)}
+.opt:active{transform:scale(.99)}
+/* 2. waitlist confirmation */
+.wl-done{animation:wlIn .5s var(--ease-out) both}
+.wl-tick{width:46px;height:46px;justify-self:center;margin-bottom:.2rem}
+.wl-tick circle{fill:none;stroke:rgba(205,176,122,.35);stroke-width:1.5}
+.wl-tick path{fill:none;stroke:var(--gold-soft);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:30;stroke-dashoffset:30;animation:tickDraw .45s .25s var(--ease-out) forwards}
+@keyframes wlIn{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes tickDraw{to{stroke-dashoffset:0}}
+/* 3. dial and unit swaps */
+.chip b{display:inline-block}
+.swap-in{animation:swapIn .26s var(--ease-out) both}
+@keyframes swapIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* 4. accordions open smoothly (height where the browser supports it; the text fades in everywhere) */
+:root{interpolate-size:allow-keywords}
+.faq details::details-content,.acc details::details-content{height:0;overflow:clip;transition:height .25s var(--ease-out),content-visibility .25s allow-discrete}
+.faq details[open]::details-content,.acc details[open]::details-content{height:auto}
+.faq details[open] > p,.acc details[open] > .in{animation:fadeUp .3s var(--ease-out) both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+/* 5. bag count pop */
+.nav .bag b.pop{animation:pop .3s var(--ease-out)}
+@keyframes pop{40%{transform:scale(1.15)}to{transform:scale(1)}}
+/* 6. card groups enter once */
+.stg-wait > *{opacity:0;transform:translateY(14px)}
+.stg-run > *{transition:opacity .5s var(--ease-out),transform .5s var(--ease-out)}
 
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
@@ -1095,6 +1127,21 @@ footer{background:var(--forest-deep);color:var(--on-forest-muted);padding-top:cl
     acc += len;
   });
   segs.innerHTML = html;
+  if (!reduce && "IntersectionObserver" in window) {
+    var segEls = [].slice.call(segs.querySelectorAll(".seg")), drawn = false, TOTAL = 900;
+    segEls.forEach(function(el){ el.dataset.da = el.getAttribute("stroke-dasharray"); el.style.strokeDasharray = "0 " + C.toFixed(2); });
+    var ringIO = new IntersectionObserver(function(es){
+      if (drawn || !es[0].isIntersecting) return; drawn = true; ringIO.disconnect();
+      var start = 0;
+      segEls.forEach(function(el){
+        var len = parseFloat(el.dataset.da), dur = Math.max(60, len / C * TOTAL);
+        el.style.transition = "stroke-dasharray " + dur + "ms linear " + start + "ms, stroke-width .6s var(--ease), opacity .6s var(--ease)";
+        start += dur;
+        requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.style.strokeDasharray = el.dataset.da; }); });
+      });
+    }, { threshold: 0.35 });
+    ringIO.observe(document.getElementById("dial"));
+  }
   var tk = ""; for (var k=0;k<60;k++){ var a=k/60*2*Math.PI-Math.PI/2, r1=k%5?192:186, r2=198;
     tk += '<line x1="'+(200+r1*Math.cos(a)).toFixed(1)+'" y1="'+(200+r1*Math.sin(a)).toFixed(1)+'" x2="'+(200+r2*Math.cos(a)).toFixed(1)+'" y2="'+(200+r2*Math.sin(a)).toFixed(1)+'"/>'; }
   document.getElementById("ticks").innerHTML = tk;
@@ -1113,12 +1160,15 @@ footer{background:var(--forest-deep);color:var(--on-forest-muted);padding-top:cl
     }).join("");
     observeSteps();
   }
+  function swap(el){ if (reduce || !el) return; el.classList.remove("swap-in"); void el.offsetWidth; el.classList.add("swap-in"); }
   function setActive(i){
+    var changed = i !== active || setActive.forced; setActive.forced = false;
     active = i; var x = I[i];
     document.getElementById("cName").textContent = x.name;
     document.getElementById("cAmt").textContent = fmt(amt(x));
     var pct = (x.gross||x.mg)/totalGross*100;
     document.getElementById("cPct").textContent = (x.nrv && unit==="serving") ? "160% NRV · " + pct.toFixed(1) + "% by weight" : pct.toFixed(1) + "% by weight";
+    if (changed) ["cName","cAmt","cPct"].forEach(function(id){ swap(document.getElementById(id)); });
     segs.querySelectorAll(".seg").forEach(function(s){ s.classList.toggle("on", +s.dataset.i === i); });
     stepsEl.querySelectorAll(".step").forEach(function(s){ s.classList.toggle("on", +s.dataset.i === i); });
   }
@@ -1135,10 +1185,28 @@ footer{background:var(--forest-deep);color:var(--on-forest-muted);padding-top:cl
     b.addEventListener("click", function(){
       unit = b.dataset.unit;
       document.querySelectorAll(".units button").forEach(function(o){ o.setAttribute("aria-pressed", String(o===b)); });
-      renderSteps(); setActive(active);
+      renderSteps(); setActive.forced = true; setActive(active);
+      stepsEl.querySelectorAll(".chip b").forEach(swap);
     });
   });
   renderSteps(); setActive(0);
+
+  /* ---------- Card groups enter once, staggered ---------- */
+  if (!reduce && "IntersectionObserver" in window) {
+    [document.getElementById("bento"), document.querySelector(".promises")].forEach(function(g){
+      if (!g) return;
+      var r = g.getBoundingClientRect(); if (r.top < innerHeight * .85) return;   // already on screen: leave it
+      g.classList.add("stg-wait");
+      var gio = new IntersectionObserver(function(es){
+        if (!es[0].isIntersecting) return; gio.disconnect();
+        var kids = [].slice.call(g.children), delays = [0, 50, 110, 160, 220, 270, 330, 380];
+        kids.forEach(function(k, n){ k.style.transitionDelay = (delays[n] || n * 55) + "ms"; });
+        g.classList.add("stg-run"); requestAnimationFrame(function(){ g.classList.remove("stg-wait"); });
+        setTimeout(function(){ g.classList.remove("stg-run"); kids.forEach(function(k){ k.style.transitionDelay = ""; }); }, 1100);
+      }, { threshold: 0.15 });
+      gio.observe(g);
+    });
+  }
 
   /* ---------- Bento hover light ---------- */
   document.querySelectorAll(".tile").forEach(function(t){
@@ -1194,6 +1262,7 @@ footer{background:var(--forest-deep);color:var(--on-forest-muted);padding-top:cl
   function toast(m){ toastEl.textContent = m; toastEl.classList.add("show"); clearTimeout(tt); tt = setTimeout(function(){ toastEl.classList.remove("show"); }, 3600); }
   document.getElementById("addBtn").addEventListener("click", function(){
     bag += qty; store.set("bag", String(bag)); showBag();
+    var bc = document.getElementById("bagCount"); if (!reduce) { bc.classList.remove("pop"); void bc.offsetWidth; bc.classList.add("pop"); }
     store.set("plan", plan());
     track("add_to_cart", PRICES[plan()] * qty);
     toast(store.get("email") ? "Added " + qty + " × Restore. We'll email you the moment checkout opens." : "Added " + qty + " × Restore. Checkout opens at launch. Join the waitlist to be first.");
@@ -1218,7 +1287,7 @@ footer{background:var(--forest-deep);color:var(--on-forest-muted);padding-top:cl
     var card = document.getElementById("wlCard");
     card.querySelector("form").hidden = true;
     var d = document.createElement("div"); d.className = "wl-done";
-    d.innerHTML = "<b>You're on the list.</b><p>" + (where === "preview" ? "Preview mode: sign-ups are saved on the live site." : "Check your inbox for a welcome note from Dr Jameel.") + "</p>";
+    d.innerHTML = '<svg class="wl-tick" viewBox="0 0 46 46" aria-hidden="true"><circle cx="23" cy="23" r="21"/><path d="M14 23.5l6 6 12-13"/></svg>' + "<b>You're on the list.</b><p>" + (where === "preview" ? "Preview mode: sign-ups are saved on the live site." : "Check your inbox for a welcome note from Dr Jameel.") + "</p>";
     card.appendChild(d); closeInvite(false);
   }
   document.getElementById("wlForm").addEventListener("submit", function(e){
