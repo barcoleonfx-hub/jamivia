@@ -129,8 +129,7 @@ Priority order. **Owner** says who has to provide it.
    - Cookie consent, privacy policy, terms and conditions, returns policy.
 
 ## Founder story (added to the site): needs client approval
-- Uses first name only: **Mohammed**, "Practising UK dentist".
-  Confirm his preferred name and surname. If he uses the "Dr" title, the GDC requires it to be clear he is a dentist.
+- Name confirmed: **Dr Mohammed Jameel**. "Dentist" or "Practising UK dentist" is shown next to the title everywhere it appears, to meet the GDC's rule that the "Dr" courtesy title must make clear he is a dentist.
 - The condition is described as "a long-term digestive condition", diagnosed at 27. Ulcerative colitis is deliberately **not named** on the shop site.
   Naming it next to a product page invites the reading that the product treats it, which is a medicinal claim.
   The TikTok and story content can name it, as long as it never links the product to the condition.
@@ -138,3 +137,29 @@ Priority order. **Owner** says who has to provide it.
 - "Nothing artificial" wording on the site: "No artificial sweeteners, flavourings or colours … Excipients: none".
   Avoid "100% natural": the amino acids are typically manufactured.
 - Portrait: `img/founder.webp`, cropped to 4:5 from the supplied photo.
+
+## Capture system (waitlist, abandoned basket, welcome series)
+**Built**
+- On the site:
+  - Waitlist section: first name, email, unticked consent box (UK GDPR / PECR).
+  - Slide-in invite: appears once at 45% scroll, or after "Add to bag" if the visitor isn't signed up. A dismissal is remembered.
+  - Basket count is remembered on the visitor's device.
+- 10 email templates in `/emails`, with a gallery at `/emails/index.html`. Built by `tools/emails/build.py`. Klaviyo tags are used for first name and unsubscribe.
+  - **Waitlist:** welcome (immediately), philosophy (day 3), formula (day 7), launch day (campaign).
+  - **Abandoned basket:** 1 h, 24 h, 72 h.
+  - **Post-purchase:** day 1 how to start, day 7 move to a full scoop, day 21 reorder (one-time buyers only).
+
+**To switch it on: Klaviyo (recommended; free up to 250 contacts)**
+1. Create a Klaviyo account. Create a list called "Waitlist" and turn on double opt-in.
+2. In `index.html`, set `KLAVIYO = { companyId: "<public key>", waitlistListId: "<list id>" }`.
+   Until then, the forms run in preview mode and send nothing.
+3. Build the flows in Klaviyo and paste in the HTML from `/emails`:
+   - Waitlist flow: triggered by being added to the list.
+   - Abandoned basket flow: triggered by "Started Checkout", once Stripe checkout exists. "Added to Cart" events are already sent for known visitors.
+   - Post-purchase flow: triggered by "Placed Order".
+4. Put the company name and registered address in the email footer. This is a legal requirement.
+5. Add privacy policy and cookie pages before collecting real emails.
+
+**Decisions needed**
+- The launch offer in waitlist email 4.
+- The guarantee in basket email 3. Both are marked [in brackets].
