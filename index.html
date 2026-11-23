@@ -90,7 +90,7 @@ em{font-style:italic}
   font-family:var(--display);font-weight:300;font-size:clamp(5.2rem,21vw,21rem);line-height:.8;letter-spacing:.02em;
   background:linear-gradient(180deg,#F3EFE4 0%,#E4D6B5 55%,rgba(205,176,122,.55) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
   animation:giantIn 1.6s var(--ease) both}
-.stage .jar{position:relative;height:clamp(300px,52svh,580px);width:auto;max-width:78%;filter:drop-shadow(0 50px 50px rgba(0,0,0,.45)) drop-shadow(0 8px 12px rgba(0,0,0,.25));animation:jarIn 1.6s .15s var(--ease) both}
+.stage .jar{position:relative;height:clamp(300px,54svh,600px);width:auto;max-width:92%;object-fit:contain;filter:drop-shadow(0 40px 50px rgba(0,0,0,.4));animation:jarIn 1.6s .15s var(--ease) both}
 .hero-bottom{display:grid;grid-template-columns:1.2fr auto;gap:2rem;align-items:end;border-top:1px solid var(--line-on-forest);padding-top:1.6rem}
 .hero h1{font-size:clamp(2.3rem,4.4vw,4.1rem);line-height:1}
 .hero h1 em{color:var(--gold-soft)}
@@ -100,6 +100,7 @@ em{font-style:italic}
 @keyframes jarIn{from{opacity:0;transform:translateY(40px) scale(.96)}to{opacity:1;transform:none}}
 @media (max-width:760px){
   .hero{min-height:auto}
+  .stage .jar{height:auto;width:min(92%,420px)}
   .hero-top .label:last-child{display:none}
   .giant{top:42%}
   .stage .jar{height:clamp(260px,46svh,420px)}
@@ -260,7 +261,7 @@ em{font-style:italic}
 .shop .wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(2rem,5vw,5rem);align-items:start}
 .shop .pic{position:sticky;top:calc(96px + env(safe-area-inset-top,0px));border-radius:28px;overflow:hidden;aspect-ratio:4/5;max-width:100%;display:grid;place-items:center;
   background:radial-gradient(60% 50% at 50% 46%, rgba(213,188,136,.45), transparent 70%),linear-gradient(160deg,var(--forest),var(--forest-deep))}
-.shop .pic svg.j{width:62%;height:auto;filter:drop-shadow(0 40px 40px rgba(0,0,0,.45))}
+.shop .pic .j{width:82%;height:auto;filter:drop-shadow(0 40px 40px rgba(0,0,0,.4))}
 .shop .pic .badge{position:absolute;left:1.4rem;top:1.4rem;color:var(--on-forest)}
 .shop .pic .badge2{position:absolute;right:1.4rem;bottom:1.4rem;color:var(--on-forest-muted);text-align:right}
 .buy{display:grid;gap:1.6rem;padding-top:1rem}
@@ -460,7 +461,7 @@ footer{background:var(--forest-deep);color:var(--on-forest-muted);padding-top:cl
   </div>
   <div class="stage">
     <p class="giant" aria-hidden="true">JAMIVIA</p>
-    <svg class="jar" viewBox="0 0 300 390" role="img" aria-label="Jamivia Restore jar"><use href="#jar"/></svg>
+    <img class="jar" src="img/jamivia-jar.webp" alt="Jamivia Daily Gut Formula jar, 348 g, 30 servings" width="1424" height="1133">
   </div>
   <div class="wrap">
     <div class="hero-bottom">
@@ -642,7 +643,7 @@ footer{background:var(--forest-deep);color:var(--on-forest-muted);padding-top:cl
   <div class="wrap">
     <div class="pic">
       <span class="badge label">Restore</span>
-      <svg class="j" viewBox="0 0 300 390" role="img" aria-label="Jamivia Restore jar"><use href="#jar"/></svg>
+      <img class="j" src="img/jamivia-jar.webp" alt="Jamivia Daily Gut Formula jar" width="1424" height="1133" loading="lazy">
       <span class="badge2 mono">348 g<br>30 servings</span>
     </div>
     <div class="buy">

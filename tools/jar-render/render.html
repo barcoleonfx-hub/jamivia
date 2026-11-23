@@ -1,0 +1,192 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:"Cormorant Garamond";font-weight:500;src:url(node_modules/@fontsource/cormorant-garamond/files/cormorant-garamond-latin-500-normal.woff2)}
+@font-face{font-family:"Jost";font-weight:400;src:url(node_modules/@fontsource/jost/files/jost-latin-400-normal.woff2)}
+@font-face{font-family:"Jost";font-weight:500;src:url(node_modules/@fontsource/jost/files/jost-latin-500-normal.woff2)}
+html,body{margin:0;background:transparent}
+</style>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+
+const q = new URLSearchParams(location.search);
+const SHOT = q.get("shot") || "forest";
+const W = +q.get("w") || 2400, H = +q.get("h") || 1600;
+
+await document.fonts.load('500 100px "Cormorant Garamond"');
+await document.fonts.load('400 40px "Jost"');
+await document.fonts.load('500 40px "Jost"');
+
+const GREEN = "#1E392C", INK = "#4E5A53";
+
+/* ---------------- label artwork (full wrap, front centred) ---------------- */
+function labelCanvas(){
+  const cw = 4096, ch = 1056, c = document.createElement("canvas");
+  c.width = cw; c.height = ch;
+  const x = c.getContext("2d"), cx = cw/2;
+  x.textAlign = "center"; x.textBaseline = "alphabetic";
+  // monogram: J with leaf
+  x.save(); x.translate(cx - 68, -8); x.scale(2.3, 2.3);
+  x.fillStyle = GREEN; x.font = '500 92px "Cormorant Garamond"'; x.fillText("J", 30, 70);
+  x.fill(new Path2D("M8 58 C14 40 30 30 50 22 C46 38 32 52 8 58Z"));
+  x.strokeStyle = "#F4F3EF"; x.lineWidth = 1.1; x.stroke(new Path2D("M10 56 C22 46 34 36 47 25"));
+  x.restore();
+  const t = (s, y, font, ls, col) => { x.font = font; x.letterSpacing = ls; x.fillStyle = col; x.fillText(s, cx + parseFloat(ls)/2, y); };
+  t("JAMIVIA", 330, '500 118px "Cormorant Garamond"', "34px", GREEN);
+  t("DAILY GUT FORMULA", 398, '400 31px "Jost"', "12px", INK);
+  x.fillStyle = INK; x.fillRect(cx - 78, 450, 156, 2.4);
+  t("A FOUNDATIONAL DAILY BLEND", 522, '400 24px "Jost"', "8px", INK);
+  t("OF SIX NUTRIENTS", 560, '400 24px "Jost"', "8px", INK);
+  // icon row
+  const ix = [-330, -110, 110, 330], iy = 650;
+  x.strokeStyle = "#6F6A5E"; x.lineWidth = 3; x.lineCap = "round";
+  x.beginPath(); x.arc(cx+ix[0], iy, 26, 0, 7); x.stroke(); x.beginPath(); x.arc(cx+ix[0], iy, 9, 0, 7); x.stroke();
+  x.save(); x.translate(cx+ix[1]-30, iy-32); x.scale(2.2,2.2);
+  x.stroke(new Path2D("M2 26 C6 12 16 4 28 1 C26 14 16 22 2 26Z M4 24 L22 7")); x.restore();
+  x.beginPath(); x.moveTo(cx+ix[2], iy-30); x.bezierCurveTo(cx+ix[2]-20, iy-4, cx+ix[2]-22, iy+4, cx+ix[2]-22, iy+10);
+  x.arc(cx+ix[2], iy+10, 22, Math.PI, 0, true); x.bezierCurveTo(cx+ix[2]+22, iy+4, cx+ix[2]+20, iy-4, cx+ix[2], iy-30); x.stroke();
+  x.beginPath(); for (let k=0;k<6;k++){ const a = Math.PI/3*k - Math.PI/2; const px = cx+ix[3]+28*Math.cos(a), py = iy+28*Math.sin(a); k?x.lineTo(px,py):x.moveTo(px,py);} x.closePath(); x.stroke();
+  x.strokeStyle = "#BDB8AC"; x.lineWidth = 2;
+  [-220, 0, 220].forEach(d => { x.beginPath(); x.moveTo(cx+d, iy-42); x.lineTo(cx+d, iy+92); x.stroke(); });
+  const lab = [["SIX","NUTRIENTS"],["PLANT","FIBRE"],["NO","PROBIOTICS"],["ZINC","160% NRV"]];
+  lab.forEach((l,i) => { x.font='400 19px "Jost"'; x.letterSpacing="5px"; x.fillStyle=INK; x.fillText(l[0], cx+ix[i]+2.5, iy+66); x.fillText(l[1], cx+ix[i]+2.5, iy+92); });
+  // green band
+  x.fillStyle = GREEN; x.fillRect(cx - 420, 800, 840, 46);
+  t("FOOD SUPPLEMENT   |   UNFLAVOURED POWDER", 832, '500 22px "Jost"', "7px", "#EEEBE1");
+  t("30 SERVINGS   |   NET WT. 348 g", 912, '400 24px "Jost", "DejaVu Sans", sans-serif', "6px", INK);
+  // side panel (left of front): directions
+  x.textAlign = "left";
+  const sx = cx - 1150;
+  const sl = (s, y, f, col) => { x.font = f; x.letterSpacing = "4px"; x.fillStyle = col; x.fillText(s, sx, y); };
+  sl("DIRECTIONS", 300, '500 22px "Jost"', GREEN);
+  ["Stir one level scoop (11.6 g) into", "200–250 ml of water once daily.", "Do not exceed the recommended", "daily intake."].forEach((s,i)=>sl(s, 350+i*36, '400 20px "Jost"', INK));
+  sl("STORAGE", 560, '500 22px "Jost"', GREEN);
+  ["Store in a cool, dry place.", "Keep out of reach of young children."].forEach((s,i)=>sl(s, 610+i*36, '400 20px "Jost"', INK));
+  // side panel (right of front): ingredients
+  const rx = cx + 700;
+  const rl = (s, y, f, col) => { x.font = f; x.letterSpacing = "4px"; x.fillStyle = col; x.fillText(s, rx, y); };
+  rl("PER 11.6 g SCOOP", 300, '500 22px "Jost"', GREEN);
+  [["L-Glutamine","4.99 g"],["PHGG","4.99 g"],["Glycine","999 mg"],["Taurine","499 mg"],["L-Carnosine","59 mg"],["Zinc","16 mg (160% NRV)"]].forEach((r,i)=>{
+    rl(r[0], 350+i*40, '400 20px "Jost"', INK); x.textAlign="right"; x.font='400 20px "Jost"'; x.fillText(r[1], rx+430, 350+i*40); x.textAlign="left"; });
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 16;
+  return tex;
+}
+
+/* ---------------- leaf gobo for dappled shadows ---------------- */
+function leafAlpha(){
+  const c = document.createElement("canvas"); c.width = c.height = 1024;
+  const x = c.getContext("2d"); x.fillStyle = "#000"; x.fillRect(0,0,1024,1024);
+  x.fillStyle = "#fff"; x.strokeStyle = "#fff";
+  const branch = (bx, by, ang, len, n) => {
+    x.save(); x.translate(bx, by); x.rotate(ang);
+    x.lineWidth = 7; x.beginPath(); x.moveTo(0,0); x.quadraticCurveTo(len*.5, -30, len, 10); x.stroke();
+    for (let i=1;i<=n;i++){ const p = i/n*len; const side = i%2 ? 1 : -1;
+      x.save(); x.translate(p, -10 + (p/len)*14); x.rotate(side*(0.75 + Math.random()*.3));
+      x.beginPath(); x.ellipse(52, 0, 56, 15, 0, 0, Math.PI*2); x.fill(); x.restore(); }
+    x.restore();
+  };
+  branch(-40, 180, 0.35, 900, 16); branch(80, 620, -0.15, 820, 14); branch(500, -40, 1.1, 700, 12);
+  const t = new THREE.CanvasTexture(c); return t;
+}
+
+/* ---------------- stone texture ---------------- */
+function stoneTex(base){
+  const c = document.createElement("canvas"); c.width = c.height = 1024;
+  const x = c.getContext("2d"); x.fillStyle = base; x.fillRect(0,0,1024,1024);
+  for (let i=0;i<60000;i++){ const v = Math.random(); x.fillStyle = v<.5 ? "rgba(120,100,80,.07)" : "rgba(255,255,255,.08)";
+    x.fillRect(Math.random()*1024, Math.random()*1024, 1+Math.random()*2.5, 1+Math.random()*2.5); }
+  for (let i=0;i<40;i++){ x.fillStyle = "rgba(150,125,95,.05)"; x.beginPath(); x.ellipse(Math.random()*1024, Math.random()*1024, 40+Math.random()*160, 6+Math.random()*16, 0, 0, 7); x.fill(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+}
+
+/* ---------------- renderer + scene ---------------- */
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true, preserveDrawingBuffer:true});
+renderer.setPixelRatio(1); renderer.setSize(W, H);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NeutralToneMapping; renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const pm = new THREE.PMREMGenerator(renderer);
+scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.55;
+
+/* jar */
+const jar = new THREE.Group();
+const white = new THREE.MeshPhysicalMaterial({color:0xF7F6F3, roughness:.4, clearcoat:.25, clearcoatRoughness:.5, sheen:.2});
+const bodyPts = [];
+bodyPts.push(new THREE.Vector2(0,0));
+for (let i=0;i<=10;i++){ const a = i/10*Math.PI/2; bodyPts.push(new THREE.Vector2(0.88 + 0.12*Math.sin(a), 0.12 - 0.12*Math.cos(a))); }
+bodyPts.push(new THREE.Vector2(1.0, 1.80));
+for (let i=1;i<=6;i++){ const a = i/6*Math.PI/2; bodyPts.push(new THREE.Vector2(1.0 - 0.05*Math.sin(a), 1.80 + 0.06*(1-Math.cos(a)) + 0.02*Math.sin(a))); }
+bodyPts.push(new THREE.Vector2(0.95, 1.98));
+const body = new THREE.Mesh(new THREE.LatheGeometry(bodyPts, 160), white);
+body.castShadow = body.receiveShadow = true; jar.add(body);
+const lidPts = [new THREE.Vector2(0.99,1.90), new THREE.Vector2(1.035,1.92)];
+for (let i=0;i<=8;i++){ const a = i/8*Math.PI/2; lidPts.push(new THREE.Vector2(1.035 - 0.035*(1-Math.cos(a)) , 2.33 + 0.04*Math.sin(a))); }
+lidPts.push(new THREE.Vector2(0.95, 2.375), new THREE.Vector2(0, 2.375));
+lidPts.splice(2, 0, new THREE.Vector2(1.035, 2.33));
+const lidMat = white.clone(); lidMat.roughness = .36;
+const lid = new THREE.Mesh(new THREE.LatheGeometry(lidPts, 160), lidMat);
+lid.castShadow = lid.receiveShadow = true; jar.add(lid);
+const label = new THREE.Mesh(new THREE.CylinderGeometry(1.0025, 1.0025, 1.62, 200, 1, true, -Math.PI, Math.PI*2),
+  new THREE.MeshPhysicalMaterial({map:labelCanvas(), transparent:true, roughness:.55, depthWrite:false}));
+label.position.y = 0.93; label.receiveShadow = true; jar.add(label);
+scene.add(jar);
+
+/* lights */
+const sun = new THREE.DirectionalLight(0xFFF1DC, 2.6);
+sun.castShadow = true; sun.shadow.mapSize.set(4096,4096); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
+Object.assign(sun.shadow.camera, {left:-5,right:5,top:5,bottom:-5,near:.5,far:30});
+scene.add(sun, sun.target);
+const fill = new THREE.DirectionalLight(0xDDE6FF, .35); fill.position.set(-6, 3, 4); scene.add(fill);
+
+const cam = new THREE.PerspectiveCamera(24, W/H, .1, 200);
+
+function gobo(pos, rot, scale){
+  const a = leafAlpha();
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(1,1), new THREE.MeshBasicMaterial({colorWrite:false, depthWrite:false}));
+  m.customDepthMaterial = new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking, alphaMap:a, alphaTest:.5});
+  m.castShadow = true; m.position.copy(sun.position).multiplyScalar(pos); m.lookAt(sun.position); m.rotateZ(rot); m.scale.setScalar(scale); scene.add(m);
+}
+
+if (SHOT === "forest"){
+  scene.background = new THREE.Color(0x1E392C);
+  scene.fog = new THREE.Fog(0x1E392C, 13, 21);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(80,80), new THREE.MeshStandardMaterial({color:0x1F3A2D, roughness:.95}));
+  ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
+  sun.position.set(4, 7, 5); sun.intensity = 2.4;
+  const glow = new THREE.PointLight(0xE8CFA0, 6, 12, 1.6); glow.position.set(-2.4, 2.2, -2.5); scene.add(glow);
+  gobo(0.55, 0.6, 5);
+  cam.position.set(0, 1.55, 11.5); cam.lookAt(0, 1.08, 0);
+} else if (SHOT === "stone"){
+  scene.background = new THREE.Color(0xD6D1C8);
+  const wallMat = new THREE.MeshStandardMaterial({color:0xD9D4CB, roughness:1});
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(60,30), wallMat); wall.position.set(0, 8, -3.2); wall.receiveShadow = true; scene.add(wall);
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(9, 1.2, 5), new THREE.MeshStandardMaterial({map:stoneTex("#CFC7BA"), roughness:.85}));
+  plinth.position.set(0, -0.6, 0); plinth.receiveShadow = plinth.castShadow = true; scene.add(plinth);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(80,80), new THREE.MeshStandardMaterial({color:0xC6BFB3, roughness:1}));
+  floor.rotation.x = -Math.PI/2; floor.position.y = -1.2; floor.receiveShadow = true; scene.add(floor);
+  const block = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.6, 2.2), new THREE.MeshStandardMaterial({map:stoneTex("#D8D0C3"), roughness:.9}));
+  block.position.set(-3.4, 1.3, -1.2); block.rotation.y = .25; block.castShadow = block.receiveShadow = true; scene.add(block);
+  sun.position.set(5, 6, 4); sun.intensity = 2.1;
+  gobo(0.5, 2.2, 5.5);
+  jar.rotation.y = -0.32;
+  cam.position.set(2.2, 1.9, 11); cam.lookAt(-0.2, 1.05, 0);
+  scene.environmentIntensity = 0.5;
+} else { // cutout: transparent background, soft contact shadow only
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(40,40), new THREE.ShadowMaterial({opacity:.28}));
+  ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
+  sun.position.set(2.5, 8, 4); sun.intensity = 2.5;
+  scene.environmentIntensity = 0.75;
+  cam.fov = 20; cam.position.set(0, 1.6, 13.5); cam.lookAt(0, 1.16, 0);
+}
+cam.aspect = W/H; cam.updateProjectionMatrix();
+renderer.render(scene, cam);
+window.__png = renderer.domElement.toDataURL("image/png");
+</script>
+</body></html>
