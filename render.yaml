@@ -1,0 +1,53 @@
+# One-click hosting for the Jamivia website, waitlist, orders and admin dashboard on Render (render.com).
+# In Render: New → Blueprint → pick this repository. It creates one web service with a persistent disk
+# for the database and the email outbox. You'll be asked for the values marked "sync: false".
+services:
+  - type: web
+    name: jamivia
+    runtime: node
+    plan: starter
+    region: frankfurt
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /healthz
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        value: file:/var/data/jamivia.db
+      - key: OUTBOX_DIR
+        value: /var/data/outbox
+      - key: AUTH_SECRET
+        generateValue: true
+      # Admin sign-in for /admin. Use a long password.
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # The public address, e.g. https://jamivia.onrender.com or https://jamivia.co.uk. Used in email links.
+      - key: SITE_URL
+        sync: false
+      # Outgoing email. Leave blank to start: emails are saved on the disk instead of sent.
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        value: Jamivia <hello@jamivia.co.uk>
+      # Stripe checkout. Leave blank until prices are set; the shop stays in waitlist mode.
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_SUB
+        sync: false
+      - key: STRIPE_PRICE_ONE
+        sync: false

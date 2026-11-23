@@ -149,17 +149,27 @@ Priority order. **Owner** says who has to provide it.
   - **Abandoned basket:** 1 h, 24 h, 72 h.
   - **Post-purchase:** day 1 how to start, day 7 move to a full scoop, day 21 reorder (one-time buyers only).
 
-**To switch it on: Klaviyo (recommended; free up to 250 contacts)**
-1. Create a Klaviyo account. Create a list called "Waitlist" and turn on double opt-in.
-2. In `index.html`, set `KLAVIYO = { companyId: "<public key>", waitlistListId: "<list id>" }`.
-   Until then, the forms run in preview mode and send nothing.
-3. Build the flows in Klaviyo and paste in the HTML from `/emails`:
-   - Waitlist flow: triggered by being added to the list.
-   - Abandoned basket flow: triggered by "Started Checkout", once Stripe checkout exists. "Added to Cart" events are already sent for known visitors.
-   - Post-purchase flow: triggered by "Placed Order".
-4. Put the company name and registered address in the email footer. This is a legal requirement.
-5. Add privacy policy and cookie pages before collecting real emails.
+**Now handled by our own backend (replaces Klaviyo)**
+- Same approach as Preston Hill: Node + SQLite on Render with a persistent disk (`render.yaml`).
+- Sign-ups, trade enquiries, analytics, orders and every email sequence run on our server. No third-party email platform is needed.
+- Email sending: set `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS`, for example a Google Workspace or Microsoft 365 mailbox, or Postmark/Resend for better delivery.
+  Until then, emails are saved to the disk.
+- Stripe: create the two prices (subscription and one-time) and set `STRIPE_SECRET_KEY`, `STRIPE_PRICE_SUB`, `STRIPE_PRICE_ONE`.
+  Add a webhook to `https://<site>/api/stripe/webhook` for `checkout.session.completed`, and set `STRIPE_WEBHOOK_SECRET`.
+  Until then, the shop stays in waitlist mode.
+- Analytics are first-party and anonymous: a random per-tab session id, no cookies, no IP stored.
+  Mention this in the privacy policy. The UK's 2025 Data (Use and Access) Act allows analytics storage like this without a consent banner, provided users are told and can object.
+  A solicitor should confirm this wording before launch.
 
 **Decisions needed**
 - The launch offer in waitlist email 4.
 - The guarantee in basket email 3. Both are marked [in brackets].
+
+## Made in Britain
+- On the site: a Union flag and "Made in Britain" in the top bar, the moving banner, the shop chips and the footer.
+  There is also a dedicated section: "Made here, not shipped in", with a rotating seal and four facts.
+- The wording is deliberately accurate:
+  - "blended, packed and sealed in England by a specialist UK supplement manufacturer".
+  - A footnote says the ingredients are sourced worldwide. Claiming British ingredients would be misleading.
+- The manufacturer (G&G) is never named. Their spec says the label must not state their name or address.
+- **Confirm with G&G:** that blending, filling and sealing all happen at the East Grinstead site. If any step is subcontracted, adjust the wording.

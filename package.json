@@ -1,0 +1,20 @@
+{
+  "name": "jamivia",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Jamivia website, waitlist, orders and admin dashboard",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "DATABASE_URL=file:./data/jamivia.db OUTBOX_DIR=./data/outbox node --watch server/index.js",
+    "emails": "python3 tools/emails/build.py"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@libsql/client": "0.15.15",
+    "bcryptjs": "3.0.2",
+    "nodemailer": "10.3.1"
+  }
+}
