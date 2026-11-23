@@ -127,3 +127,14 @@ Priority order. **Owner** says who has to provide it.
 9. **Tracking and legal.** Owner: us.
    - Analytics plus Meta and TikTok pixels.
    - Cookie consent, privacy policy, terms and conditions, returns policy.
+
+## Founder story (added to the site): needs client approval
+- Uses first name only: **Mohammed**, "Practising UK dentist".
+  Confirm his preferred name and surname. If he uses the "Dr" title, the GDC requires it to be clear he is a dentist.
+- The condition is described as "a long-term digestive condition", diagnosed at 27. Ulcerative colitis is deliberately **not named** on the shop site.
+  Naming it next to a product page invites the reading that the product treats it, which is a medicinal claim.
+  The TikTok and story content can name it, as long as it never links the product to the condition.
+- The quote "I wanted the product I couldn't find when I needed it. Simple enough to trust, honest enough to check." is written for him and needs his sign-off.
+- "Nothing artificial" wording on the site: "No artificial sweeteners, flavourings or colours … Excipients: none".
+  Avoid "100% natural": the amino acids are typically manufactured.
+- Portrait: `img/founder.webp`, cropped to 4:5 from the supplied photo.

@@ -247,14 +247,55 @@ em{font-style:italic}
 @media (max-width:900px){.integrity .wrap{grid-template-columns:1fr}.cert{transform:none;margin-top:2rem}.stamp{right:-6px;width:104px;height:104px}.facts li{grid-template-columns:1fr;gap:.2rem}}
 
 /* ============ STORY ============ */
-.story{background:var(--forest-deep);color:var(--on-forest);position:relative;overflow:hidden;padding-block:clamp(6rem,12vw,10rem)}
-.story svg.botan{position:absolute;right:-4%;bottom:-6%;height:115%;width:auto;opacity:.5;pointer-events:none}
-.story .wrap{position:relative;display:grid;gap:2.2rem;max-width:var(--maxw)}
+.story{background:var(--forest-deep);color:var(--on-forest);position:relative;overflow:hidden;padding-block:clamp(6rem,11vw,10rem)}
+.story svg.botan{position:absolute;right:-6%;top:-4%;height:70%;width:auto;opacity:.35;pointer-events:none}
 .story .label{color:var(--gold-soft)}
-.story blockquote{margin:0;font-family:var(--display);font-weight:300;font-size:clamp(2.4rem,5.8vw,5.6rem);line-height:1.02;letter-spacing:-.02em;max-width:14em}
-.story blockquote em{color:var(--gold-soft)}
-.story .by{display:flex;flex-wrap:wrap;align-items:center;gap:1.2rem 2.4rem;color:var(--on-forest-muted);max-width:52rem}
-.story .by p{flex:1 1 20rem}
+.story-grid{position:relative;display:grid;grid-template-columns:.82fr 1.18fr;gap:clamp(2.4rem,6vw,6.5rem);align-items:start}
+.portrait{position:sticky;top:calc(104px + env(safe-area-inset-top,0px));margin:0;border-radius:28px;overflow:hidden;aspect-ratio:4/5;max-width:100%;background:var(--forest);box-shadow:0 60px 120px -60px rgba(0,0,0,.7)}
+.portrait img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 20%}
+.portrait::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 52%,rgba(10,22,16,.92) 100%);pointer-events:none}
+.portrait figcaption{position:absolute;left:1.6rem;right:1.6rem;bottom:1.5rem;z-index:1;display:grid;gap:.3rem}
+.portrait figcaption b{font-family:var(--display);font-weight:400;font-size:2.3rem;line-height:1;color:#EEEBE1}
+.portrait figcaption span{font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:#CDB07A}
+.portrait .seal{position:absolute;top:1.2rem;right:1.2rem;z-index:1;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:rgba(17,35,26,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(205,176,122,.5)}
+.portrait .seal svg{width:24px;height:32px;color:#CDB07A;--mono-vein:#11231A}
+.story h2{font-size:clamp(2.8rem,6.2vw,5.8rem);margin-top:1.4rem;max-width:10em}
+.story h2 em{color:var(--gold-soft)}
+.prose{display:grid;gap:1.4rem;margin-top:2.6rem;max-width:36em}
+.prose p{color:var(--on-forest-muted);font-size:1.08rem}
+.prose p.lead{font-family:var(--display);font-size:clamp(1.5rem,2.3vw,1.95rem);line-height:1.3;color:var(--on-forest)}
+.pull{margin:1.2rem 0;padding:.4rem 0 .4rem 1.6rem;border-left:1px solid var(--gold-soft);font-family:var(--display);font-style:italic;font-weight:300;font-size:clamp(1.8rem,3vw,2.6rem);line-height:1.15;color:var(--gold-soft)}
+.sig{display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap;margin-top:.6rem}
+.sig b{font-family:var(--display);font-style:italic;font-weight:300;font-size:2.8rem;color:var(--on-forest);line-height:1}
+.sig span{font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--on-forest-muted)}
+.chapters{list-style:none;margin:4rem 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(1.2rem,2.5vw,2.4rem)}
+.chapters li{border-top:1px solid var(--line-on-forest);padding-top:1.3rem;display:grid;gap:.6rem;align-content:start;position:relative}
+.chapters li::before{content:"";position:absolute;top:-4px;left:0;width:7px;height:7px;border-radius:50%;background:var(--gold-soft)}
+.chapters .label{font-size:.66rem}
+.chapters h3{font-size:1.9rem}
+.chapters p{color:var(--on-forest-muted);font-size:.95rem}
+@media (max-width:900px){.story-grid{grid-template-columns:1fr}.portrait{position:relative;top:0;max-width:520px}.chapters{grid-template-columns:1fr}}
+
+/* ============ FOR YOU ============ */
+.foryou{padding-block:clamp(5rem,10vw,8.5rem)}
+.foryou-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:1.5rem;margin-bottom:2.8rem}
+.foryou-head h2{font-size:clamp(2.6rem,5.6vw,5.2rem);max-width:11em}
+.foryou-head h2 em{color:var(--gold)}
+.foryou-head p{color:var(--muted);max-width:26em}
+.promises{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.promise{border-radius:22px;padding:1.8rem 1.6rem;background:var(--paper);border:1px solid var(--line);display:grid;gap:1rem;align-content:start;min-width:0;transition:transform .5s var(--ease),box-shadow .5s var(--ease)}
+.promise:hover{transform:translateY(-4px);box-shadow:0 30px 60px -40px rgba(17,35,26,.45)}
+.promise svg{width:38px;height:38px;stroke:var(--gold);fill:none;stroke-width:1.1}
+.promise h3{font-size:2rem;line-height:1.02}
+.promise p{color:var(--muted);font-size:.96rem}
+.promise.dark{background:var(--forest);border-color:transparent;color:var(--on-forest)}
+.promise.dark p{color:var(--on-forest-muted)}
+.promise.dark svg{stroke:var(--gold-soft)}
+.foryou .ctas{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:2.4rem}
+.btn-line-dark{border-color:var(--line);color:var(--ink)}
+.btn-line-dark:hover{border-color:var(--ink)}
+@media (max-width:1000px){.promises{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.promises{grid-template-columns:1fr}}
 
 /* ============ SHOP ============ */
 .shop{padding-block:clamp(5rem,10vw,9rem)}
@@ -624,16 +665,65 @@ footer{background:var(--forest-deep);color:var(--on-forest-muted);padding-top:cl
 
 <!-- ======= STORY ======= -->
 <section class="story" id="story" aria-labelledby="story-h">
-  <svg class="botan" viewBox="0 0 300 420" aria-hidden="true">
-    <use href="#sprig" stroke="#CDB07A" transform="translate(160 410) scale(4.2)"/>
-    <use href="#sprig" stroke="#7C9080" transform="translate(90 430) scale(2.6) rotate(-16)" opacity=".7"/>
-  </svg>
+  <div class="wrap story-grid">
+    <figure class="portrait">
+      <img src="img/founder.webp" alt="Mohammed, founder of Jamivia, in a white clinical coat" width="960" height="1200" loading="lazy">
+      <span class="seal" aria-hidden="true"><svg viewBox="0 0 60 80"><use href="#mono"/></svg></span>
+      <figcaption><b>Mohammed</b><span>Founder · Practising UK dentist</span></figcaption>
+    </figure>
+    <div>
+      <span class="label">Our story</span>
+      <h2 id="story-h">Built from a search <em>he couldn't stop.</em></h2>
+      <div class="prose">
+        <p class="lead">Mohammed is a practising UK dentist. At 27, after months of symptoms he tried to ignore, he was diagnosed with a long-term digestive condition. It changed the way he thought about health for good.</p>
+        <p>So he did what his training had taught him to do. He read. For years he worked through the research on the gut lining, on dietary fibre and on the amino acids the body relies on most, questioning everything and learning what his own system could tolerate.</p>
+        <p>What he found on the shelves frustrated him. Gut products crowded with sweeteners, flavourings and fillers. Proprietary blends that hide how much of anything you're actually getting. Loud promises on every label.</p>
+        <p>He set out to make the opposite: a short list of well-researched ingredients at honest doses, with nothing artificial and nothing hidden. Something calm enough to take every single day.</p>
+        <blockquote class="pull">“I wanted the product I couldn't find when I needed it. Simple enough to trust, honest enough to check.”</blockquote>
+        <p>That product is Jamivia. Six ingredients, every dose printed on the label, made in the UK, every batch traceable.</p>
+        <div class="sig"><b>Mohammed</b><span>Founder, Jamivia</span></div>
+      </div>
+      <ol class="chapters">
+        <li><span class="label">Age 27</span><h3>The diagnosis</h3><p>The moment a dentist became a patient, and a patient became a student of the gut.</p></li>
+        <li><span class="label">The years after</span><h3>The research</h3><p>Papers on the gut lining, fibre and amino acids. Years of reading, testing and asking better questions.</p></li>
+        <li><span class="label">Today</span><h3>The formula</h3><p>Six ingredients, developed with a UK manufacturer and written down to the milligram.</p></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ======= FOR YOU ======= -->
+<section class="foryou" aria-labelledby="fy-h">
   <div class="wrap">
-    <span class="label">Our story</span>
-    <blockquote id="story-h">“Jamivia began as a personal search for a <em>simpler, calmer</em> way to look after the gut.”</blockquote>
-    <div class="by">
-      <p>Founded by a practising UK dentist who spent years reading the research for himself, and kept wishing for one product that was quiet, transparent and easy to take every day.</p>
-      <a class="btn btn-ghost" href="#story">Read the story <span class="arr">→</span></a>
+    <div class="foryou-head">
+      <div><span class="label" style="color:var(--gold)">What it means for you</span><h2 id="fy-h" style="margin-top:1.2rem">His years of searching, <em>your shortcut.</em></h2></div>
+      <p>Nobody should have to become a researcher just to find something they trust. These are the standards he set for himself, and now for you.</p>
+    </div>
+    <div class="promises">
+      <article class="promise dark">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="18" cy="18" r="11"/><path d="M26 26l9 9"/></svg>
+        <h3>Nothing hidden</h3>
+        <p>Every ingredient and every dose is printed on the label. No proprietary blends, ever.</p>
+      </article>
+      <article class="promise">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 32 C10 16 20 8 34 6 C32 22 22 30 8 32Z"/><path d="M10 30 L28 12"/></svg>
+        <h3>Nothing artificial</h3>
+        <p>No artificial sweeteners, flavourings or colours, and nothing added to fill the tub. Excipients: none.</p>
+      </article>
+      <article class="promise">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M4 24c5-6 9-6 14 0s9 6 14 0 4-3 4-3"/><path d="M4 16c5-6 9-6 14 0s9 6 14 0 4-3 4-3"/></svg>
+        <h3>Gentle by design</h3>
+        <p>Ingredients and doses chosen with everyday tolerance in mind, with a half-scoop start for your first week.</p>
+      </article>
+      <article class="promise">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4l13 5v10c0 9-6 15-13 18C13 34 7 28 7 19V9z"/><path d="M14 20l4 4 8-9"/></svg>
+        <h3>Proof, not promises</h3>
+        <p>Made in the UK. Every batch is numbered and traceable, with certificates published from the first run.</p>
+      </article>
+    </div>
+    <div class="ctas">
+      <a class="btn btn-dark" href="#shop">Shop Restore <span class="arr">→</span></a>
+      <a class="btn btn-line-dark" href="#inside">Why these six ingredients</a>
     </div>
   </div>
 </section>
