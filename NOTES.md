@@ -95,3 +95,35 @@ Not complicated for one product. Proposed stack:
 
 ## Pre-launch checks (from earlier notes)
 Formulation scientist review; regulatory claim review; stability and shelf-life testing; moisture sensitivity; flavour; heavy metal testing.
+
+## Conversion checklist (what makes people buy)
+Priority order. **Owner** says who has to provide it.
+
+1. **Real product imagery.** Owner: client.
+   - One studio shoot, or a 3D render built from the final label.
+   - Packshot, scoop of powder, powder dissolving in a glass, the jar in a hand, a morning-ritual scene, a flat lay of the six raw ingredients.
+   - A 10-second looping video of the powder being stirred in.
+2. **Product page built to sell.** Owner: us.
+   - Image gallery, price and subscription choice above the fold.
+   - A sticky "add to bag" bar on phones.
+   - Dose table, taste, how to use, comparison table, FAQ, reviews, guarantee.
+3. **Risk reversal.** Owner: client decides, we build.
+   - Money-back guarantee, e.g. "finish the tub or your money back".
+   - A 7-sachet trial pack for sensitive buyers.
+4. **Social proof.** Owner: client.
+   - A pre-launch tester programme of 30–50 tubs, to collect honest reviews.
+   - Reviews must not describe health effects; they count as claims in GB.
+5. **Founder credibility.** Owner: client.
+   - Professional portrait plus a 60–90 second founder video.
+6. **Offer structure.** Owner: client decides.
+   - Subscription discount, a 3-tub bundle, first-order incentive, free scoop or shaker.
+7. **Trust details.** Owner: client provides, we build.
+   - Batch certificates, UK company details, delivery and returns pages, contact page.
+   - Secure checkout with Apple Pay and Google Pay.
+8. **Capture and follow-up.** Owner: us.
+   - Waitlist or email sign-up.
+   - Abandoned-basket emails.
+   - Onboarding emails: day 1, day 7 "move to a full scoop", day 21 reorder.
+9. **Tracking and legal.** Owner: us.
+   - Analytics plus Meta and TikTok pixels.
+   - Cookie consent, privacy policy, terms and conditions, returns policy.
