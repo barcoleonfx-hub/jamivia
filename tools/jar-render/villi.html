@@ -1,0 +1,106 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}</style>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+const q = new URLSearchParams(location.search);
+const W = +q.get("w") || 1600, H = +q.get("h") || 2000, SEED = +q.get("seed") || 7;
+let s = SEED; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(W, H);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const BG = new THREE.Color(0x10241a);
+scene.background = BG;
+scene.fog = new THREE.FogExp2(0x10241a, 0.16);
+const pm = new THREE.PMREMGenerator(renderer);
+scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.25;
+
+// the folded floor the villi grow from
+const floorGeo = new THREE.PlaneGeometry(40, 40, 200, 200);
+const fp = floorGeo.attributes.position;
+const fold = (x, y) => Math.sin(x * 0.35) * 0.6 + Math.cos(y * 0.28 + x * 0.1) * 0.5;
+for (let i = 0; i < fp.count; i++) fp.setZ(i, fold(fp.getX(i), fp.getY(i)));
+floorGeo.computeVertexNormals();
+const tissue = new THREE.MeshPhysicalMaterial({ color: 0xe3b08c, roughness: 0.42, sheen: 1, sheenColor: new THREE.Color(0xffd9a8), sheenRoughness: 0.3, clearcoat: 0.6, clearcoatRoughness: 0.25, emissive: 0x4a2412, emissiveIntensity: 0.35 });
+const floor = new THREE.Mesh(floorGeo, tissue);
+floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+
+// villi: soft finger-like folds, instanced
+const finger = new THREE.CapsuleGeometry(0.095, 1.25, 10, 18);
+finger.translate(0, 0.72, 0);
+// a little bulge near the tip
+const gp = finger.attributes.position;
+for (let i = 0; i < gp.count; i++) { const y = gp.getY(i); const k = (0.72 + 0.28 * Math.min(1, y / 1.1)) * (1 + 0.22 * Math.exp(-Math.pow((y - 1.15) / 0.3, 2))); const bend = 0.06 * y * y; gp.setX(i, gp.getX(i) * k + bend); gp.setZ(i, gp.getZ(i) * k); }
+finger.computeVertexNormals();
+const N = 9000;
+const villi = new THREE.InstancedMesh(finger, tissue, N);
+villi.castShadow = true; villi.receiveShadow = true;
+const m = new THREE.Matrix4(), qt = new THREE.Quaternion(), e = new THREE.Euler(), pos = new THREE.Vector3(), sc = new THREE.Vector3();
+let n = 0;
+for (let gx = -8; gx < 8 && n < N; gx += 0.23) for (let gz = -15; gz < -0.1 && n < N; gz += 0.23) {
+  const x = gx + (rnd() - 0.5) * 0.18, z = gz + (rnd() - 0.5) * 0.18;
+  pos.set(x, fold(x, -z) - 0.05, z);
+  e.set((rnd() - 0.5) * 0.35 + 0.08, rnd() * 6.28, (rnd() - 0.5) * 0.35);
+  qt.setFromEuler(e);
+  const h = 0.55 + rnd() * 0.4, w = 0.9 + rnd() * 0.35;
+  sc.set(w, h, w);
+  m.compose(pos, qt, sc); villi.setMatrixAt(n++, m);
+}
+villi.count = n; scene.add(villi);
+
+// floating motes catching the light
+const moteMat = new THREE.MeshBasicMaterial({ color: 0xf3d9a0, transparent: true, opacity: 0.85, fog: true });
+const moteGeo = new THREE.SphereGeometry(0.008, 8, 8);
+for (let i = 0; i < 160; i++) {
+  const mote = new THREE.Mesh(moteGeo, moteMat.clone());
+  mote.position.set((rnd() - 0.5) * 9, 0.9 + rnd() * 3.2, -rnd() * 11 + 1.5);
+  const sz = 0.5 + rnd() * 2.6; mote.scale.setScalar(sz);
+  mote.material.opacity = 0.25 + rnd() * 0.6;
+  scene.add(mote);
+}
+
+// light: warm gold from behind (rim), cool sage fill from the front
+const key = new THREE.DirectionalLight(0xffcf8a, 5.5);
+key.position.set(-3, 6, -12); key.castShadow = true; key.shadow.mapSize.set(2048, 2048);
+Object.assign(key.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 40 });
+scene.add(key);
+const fill = new THREE.DirectionalLight(0x9fc4ae, 0.6); fill.position.set(4, 3, 6); scene.add(fill);
+const glow = new THREE.PointLight(0xffc06a, 70, 16, 2); glow.position.set(0.8, 2.0, -5.5); scene.add(glow);
+scene.add(new THREE.HemisphereLight(0x2f5a45, 0x0c1a13, 0.5));
+
+const cam = new THREE.PerspectiveCamera(34, W / H, 0.05, 80);
+cam.position.set(0, 3.1, 2.2); cam.lookAt(0, 0.3, -6.5);
+renderer.render(scene, cam);
+const src = renderer.domElement, out = document.createElement("canvas"); out.width = W; out.height = H;
+const x = out.getContext("2d");
+x.drawImage(src, 0, 0);
+const blurred = document.createElement("canvas"); blurred.width = W; blurred.height = H;
+const bx = blurred.getContext("2d"); bx.filter = `blur(${Math.round(W / 140)}px)`; bx.drawImage(src, 0, 0);
+const mask = document.createElement("canvas"); mask.width = W; mask.height = H; const mx = mask.getContext("2d");
+const g = mx.createLinearGradient(0, 0, 0, H);
+g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(0.28, "rgba(0,0,0,.85)"); g.addColorStop(0.48, "rgba(0,0,0,0)");
+g.addColorStop(0.72, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.9)");
+mx.fillStyle = g; mx.fillRect(0, 0, W, H);
+mx.globalCompositeOperation = "source-in"; mx.drawImage(blurred, 0, 0);
+x.drawImage(mask, 0, 0);
+x.globalCompositeOperation = "screen";
+const glowG = x.createRadialGradient(W * .55, H * .36, 0, W * .55, H * .36, W * .7);
+glowG.addColorStop(0, "rgba(255,200,130,.32)"); glowG.addColorStop(1, "rgba(255,200,130,0)");
+x.fillStyle = glowG; x.fillRect(0, 0, W, H);
+x.globalCompositeOperation = "multiply";
+const vg = x.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.max(W, H) * .75);
+vg.addColorStop(0, "rgba(255,255,255,1)"); vg.addColorStop(1, "rgba(20,40,30,1)");
+x.fillStyle = vg; x.fillRect(0, 0, W, H);
+window.__png = out.toDataURL("image/png");
+</script>
+</body></html>
