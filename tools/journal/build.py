@@ -8,7 +8,7 @@ OUT = ROOT / "journal"
 ARTICLES = [
  dict(slug="gut-lining", tag="The gut", mins=4, title="The gut lining, explained in five minutes",
   dek="A single layer of cells, folded into millions of tiny fingers, sits between everything you eat and the rest of your body.",
-  img="journal-villi", alt="A macro landscape of intestinal villi lit from behind in warm gold light",
+  img="journal-villi", sm=800, W=1312, H=816, pos="50% 50%", alt="A macro view of intestinal villi, backlit in warm gold light, with floating particles",
   body="""
 <p class="lede">Most of us picture the gut as a tube. Up close, its inner surface looks more like a landscape: a soft, folded floor covered in millions of tiny projections called villi, each one lined with cells that are themselves covered in even smaller folds.</p>
 <h2>One cell thick</h2>
@@ -24,7 +24,7 @@ ARTICLES = [
 """),
  dict(slug="what-is-phgg", tag="Ingredients", mins=3, title="What is PHGG, and why does it dissolve almost clear?",
   dek="Our largest ingredient starts life as a bean grown in India and Pakistan. Here is what happens to it on the way to your glass.",
-  img="jamivia-open-wide", alt="An open tub of Jamivia powder beside its lid and a level bamboo scoop",
+  img="journal-phgg", sm=600, W=928, H=1152, pos="50% 60%", alt="An open tub of Jamivia powder on travertine, its lid beside it and a bamboo scoop of powder in front",
   body="""
 <p class="lede">Partially hydrolysed guar gum, PHGG for short, makes up 5 g of every 11.6 g scoop of Jamivia. It is a soluble fibre, and it is the reason the powder is almost invisible in water.</p>
 <h2>From a bean</h2>
@@ -39,7 +39,7 @@ ARTICLES = [
 """),
  dict(slug="no-probiotics", tag="Philosophy", mins=3, title="Why there are no probiotics in Jamivia",
   dek="Probiotics add bacteria. Antimicrobials remove them. We decided to make something that does neither.",
-  img="jamivia-stone", alt="A white Jamivia tub on a stone plinth in soft daylight",
+  img="journal-stone", sm=600, W=928, H=1152, pos="50% 62%", alt="A Jamivia tub on a travertine plinth with olive-leaf shadows on a limewashed wall",
   body="""
 <p class="lede">The gut-health shelf is crowded. Most products set out to change something: to add bacteria, to remove them, or to push the body through a reset. When Dr Mohammed Jameel designed Jamivia, he wanted to start somewhere quieter.</p>
 <h2>Six nutrients, nothing else</h2>
@@ -73,7 +73,7 @@ h1{font-family:var(--display);font-weight:300;font-size:clamp(2.6rem,6vw,5.2rem)
 .meta{margin-top:1.6rem;font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;color:var(--on-muted)}
 .cover{background:linear-gradient(var(--deep) 50%,var(--stone) 50%)}
 .cover .in{max-width:1180px;margin:auto;padding:0 max(16px,4vw)}
-.cover img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:22px;animation:rise 1s var(--ease) both}
+.cover img{display:block;width:100%;max-width:920px;margin:0 auto;height:auto;aspect-ratio:16/10;object-fit:cover;border-radius:22px;animation:rise 1s var(--ease) both}
 @keyframes rise{from{opacity:0;transform:translateY(14px) scale(.99)}to{opacity:1;transform:none}}
 article{max-width:680px;margin:auto;padding:clamp(3rem,6vw,4.5rem) max(16px,4vw) 2rem}
 article p{margin:0 0 1.35rem;color:#26352C}
@@ -101,19 +101,18 @@ footer .in{max-width:1180px;margin:auto;padding:2rem max(16px,4vw)}
 """
 
 def page(a, others):
-    cards = "".join(f'''<a class="card" href="{o["slug"]}.html"><div class="ph"><img src="../img/{o["img"]}-1200.webp" alt="" loading="lazy" width="1200" height="800"></div><span>{o["tag"]} · {o["mins"]} min read</span><b>{html.escape(o["title"])}</b></a>''' for o in others)
-    big = "2400" if a["img"] != "jamivia-open-wide" else "1600"
+    cards = "".join(f'''<a class="card" href="{o["slug"]}.html"><div class="ph"><img src="../img/{o["img"]}-{o["sm"]}.webp" alt="" loading="lazy" width="{o["W"]}" height="{o["H"]}" style="object-position:{o["pos"]}"></div><span>{o["tag"]} · {o["mins"]} min read</span><b>{html.escape(o["title"])}</b></a>''' for o in others)
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>{html.escape(a["title"])} · Jamivia Journal</title>
 <meta name="description" content="{html.escape(a["dek"])}">
-<meta property="og:title" content="{html.escape(a["title"])}"><meta property="og:image" content="../img/{a["img"]}-1200.webp">
+<meta property="og:title" content="{html.escape(a["title"])}"><meta property="og:image" content="../img/{a["img"]}.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap">
 <style>{CSS}</style></head><body>
 <header class="bar"><div class="in"><a class="wm" href="../index.html">JAMIVIA</a><a class="back" href="../index.html#journal">← The journal</a></div></header>
 <section class="hero"><div class="in"><span class="tag">{a["tag"]}</span><h1>{html.escape(a["title"])}</h1><p class="dek">{html.escape(a["dek"])}</p><p class="meta">{a["mins"]} min read · Jamivia Journal</p></div></section>
-<div class="cover"><div class="in"><img src="../img/{a["img"]}-{big}.webp" srcset="../img/{a["img"]}-1200.webp 1200w, ../img/{a["img"]}-{big}.webp {big}w" sizes="(max-width: 1180px) 100vw, 1180px" alt="{html.escape(a["alt"])}" width="{big}" height="{int(int(big)*9/16)}"></div></div>
+<div class="cover"><div class="in"><img src="../img/{a["img"]}.webp" srcset="../img/{a["img"]}-{a["sm"]}.webp {a["sm"]}w, ../img/{a["img"]}.webp {a["W"]}w" sizes="(max-width: 960px) 100vw, {'600px' if a["H"] > a["W"] else '920px'}" alt="{html.escape(a["alt"])}" width="{a["W"]}" height="{a["H"]}" style="object-position:{a["pos"]};{'max-width:600px;aspect-ratio:4/5' if a["H"] > a["W"] else ''}"></div></div>
 <article>{a["body"]}<a class="cta" href="../index.html#inside">See the six ingredients →</a></article>
 <p class="note">This article is for general information. It is not medical advice. Food supplements should not be used as a substitute for a varied and balanced diet and a healthy lifestyle.</p>
 <section class="more"><div class="in"><h2>Keep reading</h2><div class="cards">{cards}</div></div></section>
