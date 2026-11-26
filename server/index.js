@@ -25,7 +25,7 @@ if (!ADMIN_EMAIL || !ADMIN_HASH) console.warn("[jamivia] ADMIN_EMAIL / ADMIN_PAS
 /* ---------------- helpers ---------------- */
 const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".json": "application/json",
   ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".txt": "text/plain" };
-const PUBLIC = [/^\/$/, /^\/index\.html$/, /^\/img\/[\w.-]+$/, /^\/emails\/[\w.-]*$/, /^\/robots\.txt$/, /^\/favicon\.ico$/];
+const PUBLIC = [/^\/$/, /^\/(index|privacy)\.html$/, /^\/img\/[\w.-]+$/, /^\/emails\/[\w.-]*$/, /^\/journal\/[\w-]+\.html$/, /^\/robots\.txt$/, /^\/favicon\.ico$/];
 
 const BASE_HEADERS = { "X-Content-Type-Options": "nosniff", "Referrer-Policy": "strict-origin-when-cross-origin" };
 function sendRes(res, status, body, type = "text/plain; charset=utf-8", extra = {}) {
