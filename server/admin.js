@@ -240,7 +240,7 @@ async function emails(params, cfg) {
   const names = { waitlist: "Waitlist series", basket: "Abandoned basket", welcome: "After purchase" };
   const templates = Object.values(FLOWS).flat().map((s) => s.template).concat(["waitlist-4-launch"]);
   return `<div class="head"><div><h1>Emails</h1><div class="status" style="margin-top:.6rem">
-<span>Sending: <b>${cfg.smtp ? "Live (SMTP connected)" : "Saved to outbox (no SMTP yet)"}</b></span><span>Checkout: <b>${cfg.stripe ? "Stripe connected" : "Not connected"}</b></span></div></div></div>
+<span>Sending: <b>${cfg.smtp ? "Live (SMTP connected)" : "Saved to outbox (no SMTP yet)"}</b></span><span>Checkout: <b>${cfg.stripe ? "Stripe connected" : "Not connected"}</b> <a href="/admin/stripe-check">Check Stripe settings →</a></span></div></div></div>
 ${params.get("sent") ? `<p class="card" role="status">Test email ${cfg.smtp ? "sent" : "saved to the outbox"}.</p>` : ""}
 <section class="grid3">${Object.entries(FLOWS).map(([flow, steps]) => `<div class="card"><h2>${names[flow]}</h2><table><tr><th>Email</th><th class="num">Sent</th><th class="num">Queued</th></tr>
 ${steps.map((s) => { const r = map.get(s.template) || {}; return `<tr><td>${esc(s.template)}<br><span class="note">${s.after ? Math.round(s.after / 3600e3) >= 24 ? "Day " + Math.round(s.after / 86400e3) : Math.round(s.after / 3600e3) + " h after" : "Immediately"}${Number(r.failing) ? ` · <span class="down">${n(r.failing)} failing</span>` : ""}</span></td><td class="num">${n(r.sent)}</td><td class="num">${n(r.pending)}</td></tr>`; }).join("")}</table></div>`).join("")}</section>

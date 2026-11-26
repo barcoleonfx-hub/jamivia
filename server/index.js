@@ -319,6 +319,35 @@ async function handle(req, res) {
       if (!b) return sendRes(res, 404, "Not found");
       return sendCoa(res, method, b, true);
     }
+    if (path === "/admin/stripe-check") {
+      const rows = [];
+      const kind = /^sk_test_/.test(STRIPE_KEY) ? "Secret key, TEST mode" : /^sk_live_/.test(STRIPE_KEY) ? "Secret key, LIVE mode"
+        : /^rk_/.test(STRIPE_KEY) ? "Restricted key (use the Secret key instead)" : /^pk_/.test(STRIPE_KEY) ? "Publishable key: wrong key, use the Secret key (sk_…)"
+        : STRIPE_KEY ? "Not a Stripe secret key" : "Missing";
+      rows.push(["STRIPE_SECRET_KEY", kind, /^sk_(test|live)_/.test(STRIPE_KEY)]);
+      let account = null;
+      if (STRIPE_KEY) {
+        const r = await fetch("https://api.stripe.com/v1/account", { headers: { Authorization: "Bearer " + STRIPE_KEY } }).then((r) => r.json()).catch((e) => ({ error: { message: e.message } }));
+        if (r.error) rows.push(["Connection to Stripe", "Refused: " + r.error.message, false]);
+        else { account = r; rows.push(["Connection to Stripe", `Connected to ${r.settings?.dashboard?.display_name || r.business_profile?.name || "account"} (${r.country || ""})`, true]); }
+      }
+      for (const [k, v, want] of [["STRIPE_PRICE_SUB", PRICE.sub, "recurring"], ["STRIPE_PRICE_ONE", PRICE.one, "one_time"]]) {
+        if (!v) { rows.push([k, "Missing", false]); continue; }
+        if (/^prod_/.test(v)) { rows.push([k, "This is a product ID (prod_…). Open the product and copy the price ID (price_…) instead.", false]); continue; }
+        if (!/^price_/.test(v)) { rows.push([k, "Not a price ID. It should start price_", false]); continue; }
+        if (!account) { rows.push([k, "Can't check until the key works", false]); continue; }
+        const p = await fetch("https://api.stripe.com/v1/prices/" + encodeURIComponent(v), { headers: { Authorization: "Bearer " + STRIPE_KEY } }).then((r) => r.json()).catch((e) => ({ error: { message: e.message } }));
+        if (p.error) rows.push([k, "Stripe says: " + p.error.message + (/No such price/.test(p.error.message) ? " (usually a test price with a live key or the other way round)" : ""), false]);
+        else {
+          const ok = p.type === want && p.active && p.currency === "gbp";
+          rows.push([k, `£${(p.unit_amount / 100).toFixed(2)} ${p.type === "recurring" ? "every " + p.recurring.interval : "one-off"}${p.active ? "" : ", ARCHIVED"}${p.type !== want ? (want === "recurring" ? ": should be a monthly recurring price" : ": should be a one-off price") : ""}`, ok]);
+        }
+      }
+      rows.push(["STRIPE_WEBHOOK_SECRET", /^whsec_/.test(STRIPE_WEBHOOK_SECRET) ? "Set" : STRIPE_WEBHOOK_SECRET ? "Doesn't look right: it should start whsec_" : "Missing: orders won't reach the admin after payment", /^whsec_/.test(STRIPE_WEBHOOK_SECRET)]);
+      const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+      return sendRes(res, 200, simplePage("Stripe check", `<table style="text-align:left;font-family:system-ui,sans-serif;font-size:.9rem;border-collapse:collapse;margin:1rem auto">${rows.map(([a, b, ok]) =>
+        `<tr><td style="padding:.5rem .8rem;color:${ok ? "#9fd4ad" : "#f0a59a"}">${ok ? "✓" : "✗"}</td><td style="padding:.5rem .8rem">${esc(a)}</td><td style="padding:.5rem .8rem;color:#d9dccf">${esc(b)}</td></tr>`).join("")}</table>`), TYPES[".html"], adminHeaders);
+    }
     if (path === "/admin/test-email" && method === "POST") {
       const f = parseForm(await readBody(req));
       const to = clean(f.email, 254).toLowerCase(), tpl = clean(f.template, 40);
