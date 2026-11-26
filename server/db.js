@@ -68,10 +68,68 @@ const SCHEMA = [
      meta TEXT
    )`,
   `CREATE INDEX IF NOT EXISTS email_jobs_due ON email_jobs(sent_at, cancelled_at, send_at)`,
+  // ---- CRM ----
+  `CREATE TABLE IF NOT EXISTS customer_meta (
+     email TEXT PRIMARY KEY,
+     tags TEXT,
+     updated_at INTEGER
+   )`,
+  `CREATE TABLE IF NOT EXISTS customer_notes (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     email TEXT NOT NULL,
+     note TEXT NOT NULL,
+     created_at INTEGER NOT NULL
+   )`,
+  `CREATE INDEX IF NOT EXISTS customer_notes_email ON customer_notes(email)`,
+  // ---- stock and batches ----
+  `CREATE TABLE IF NOT EXISTS batches (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     code TEXT NOT NULL UNIQUE,
+     made_on TEXT,
+     best_before TEXT,
+     qty_received INTEGER NOT NULL DEFAULT 0,
+     received_at INTEGER NOT NULL,
+     status TEXT NOT NULL DEFAULT 'testing',
+     coa_file TEXT,
+     coa_name TEXT,
+     coa_uploaded_at INTEGER,
+     notes TEXT
+   )`,
+  `CREATE TABLE IF NOT EXISTS stock_moves (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     batch_id INTEGER NOT NULL,
+     delta INTEGER NOT NULL,
+     reason TEXT NOT NULL,
+     order_id INTEGER,
+     note TEXT,
+     created_at INTEGER NOT NULL
+   )`,
+  `CREATE INDEX IF NOT EXISTS stock_moves_batch ON stock_moves(batch_id)`,
+  `CREATE TABLE IF NOT EXISTS settings (
+     key TEXT PRIMARY KEY,
+     value TEXT
+   )`,
+];
+
+// Columns added after launch: added once, ignored if they already exist.
+const COLUMNS = [
+  ["orders", "batch_id", "INTEGER"],
 ];
 
 export async function migrate() {
   for (const sql of SCHEMA) await db.execute(sql);
+  for (const [table, col, type] of COLUMNS) {
+    const cols = (await db.execute(`PRAGMA table_info(${table})`)).rows.map((r) => r.name);
+    if (!cols.includes(col)) await db.execute(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`);
+  }
+}
+
+export async function setting(key, fallback) {
+  const r = await one("SELECT value FROM settings WHERE key=?", [key]);
+  return r ? r.value : fallback;
+}
+export async function setSetting(key, value) {
+  await run("INSERT INTO settings (key, value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", [key, String(value)]);
 }
 
 export async function one(sql, args = []) {

@@ -8,6 +8,7 @@ import bcrypt from "bcryptjs";
 import { migrate, one, all, run } from "./db.js";
 import { queue, cancel, hasPending, processDue, send } from "./mail.js";
 import { renderAdmin, renderLogin, subscribersCsv, ordersCsv } from "./admin.js";
+import { customerAction, customersCsv, stockAction, dispatchFromBatch, publicBatch, UPLOADS, CODE_RE, COA_TYPES } from "./backoffice.js";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const PORT = Number(process.env.PORT || 3000);
@@ -211,6 +212,21 @@ async function handle(req, res) {
     return json(res, 200, { received: true });
   }
 
+  // Batch lookup on the website: status, dates and the certificate link for released batches.
+  if (path === "/api/batch" && method === "GET") {
+    if (limited(req, "batch", 30)) return json(res, 429, { error: "Too many lookups. Try again in a minute." });
+    const code = clean(url.searchParams.get("code") || "", 40);
+    if (!CODE_RE.test(code)) return json(res, 400, { error: "Enter the batch code printed on the base of your tub." });
+    return json(res, 200, await publicBatch(code));
+  }
+  const coaM = path.match(/^\/coa\/([A-Za-z0-9._%/-]{2,120})$/);
+  if (coaM && (method === "GET" || method === "HEAD")) {
+    let code; try { code = decodeURIComponent(coaM[1]); } catch { return sendRes(res, 404, "Not found"); }
+    const b = await one("SELECT * FROM batches WHERE lower(code)=lower(?) AND status='released' AND coa_file IS NOT NULL", [code]);
+    if (!b) return sendRes(res, 404, "Not found");
+    return sendCoa(res, method, b, false);
+  }
+
   /* ----- unsubscribe ----- */
   if (path === "/unsubscribe") {
     const t = clean(url.searchParams.get("t") || "", 64);
@@ -245,11 +261,36 @@ async function handle(req, res) {
     if (method === "POST" && !sameOrigin(req)) return sendRes(res, 403, "Forbidden");
     if (path === "/admin/subscribers.csv") return sendRes(res, 200, await subscribersCsv(), "text/csv; charset=utf-8", { ...adminHeaders, "Content-Disposition": 'attachment; filename="jamivia-subscribers.csv"' });
     if (path === "/admin/orders.csv") return sendRes(res, 200, await ordersCsv(), "text/csv; charset=utf-8", { ...adminHeaders, "Content-Disposition": 'attachment; filename="jamivia-orders.csv"' });
+    if (path === "/admin/customers.csv") return sendRes(res, 200, await customersCsv(), "text/csv; charset=utf-8", { ...adminHeaders, "Content-Disposition": 'attachment; filename="jamivia-customers.csv"' });
     const m = path.match(/^\/admin\/orders\/(\d+)\/dispatch$/);
     if (m && method === "POST") {
       const f = parseForm(await readBody(req));
-      await run("UPDATE orders SET status='dispatched', tracking=?, dispatched_at=? WHERE id=?", [clean(f.tracking, 60) || null, Date.now(), Number(m[1])]);
+      const order = await one("SELECT * FROM orders WHERE id=? AND status='paid'", [Number(m[1])]);
+      if (!order) return redirect(res, "/admin?tab=orders");
+      const now = Date.now();
+      const r = await dispatchFromBatch(order.id, Number(f.batch_id) || 0, Number(order.qty || 1), now);
+      if (!r.ok) return redirect(res, "/admin?tab=orders&err=batch");
+      await run("UPDATE orders SET status='dispatched', tracking=?, dispatched_at=? WHERE id=?", [clean(f.tracking, 60) || null, now, order.id]);
       return redirect(res, "/admin?tab=orders");
+    }
+    const cm = path.match(/^\/admin\/customers\/(note|note-delete|tags|unsubscribe|resubscribe|erase)$/);
+    if (cm && method === "POST") return redirect(res, await customerAction(cm[1], parseForm(await readBody(req))));
+    const sm = path.match(/^\/admin\/stock\/(receive|coa|coa-delete|status|adjust|threshold)$/);
+    if (sm && method === "POST") {
+      let f;
+      if (/^multipart\/form-data/i.test(req.headers["content-type"] || "")) {
+        const buf = await readBody(req, 11 * 1024 * 1024);
+        try { f = Object.fromEntries(await new Request("http://x", { method: "POST", headers: { "content-type": req.headers["content-type"] }, body: buf }).formData()); }
+        catch { return redirect(res, "/admin?tab=stock&err=file"); }
+        for (const k of Object.keys(f)) if (typeof f[k] === "string") f[k] = clean(f[k], 200);
+      } else f = parseForm(await readBody(req));
+      return redirect(res, await stockAction(sm[1], f));
+    }
+    const am = path.match(/^\/admin\/coa\/(\d+)$/);
+    if (am && method === "GET") {
+      const b = await one("SELECT * FROM batches WHERE id=? AND coa_file IS NOT NULL", [Number(am[1])]);
+      if (!b) return sendRes(res, 404, "Not found");
+      return sendCoa(res, method, b, true);
     }
     if (path === "/admin/test-email" && method === "POST") {
       const f = parseForm(await readBody(req));
@@ -283,6 +324,16 @@ async function handle(req, res) {
     }
   }
   return sendRes(res, 405, "Method not allowed");
+}
+
+async function sendCoa(res, method, b, isAdmin) {
+  const type = COA_TYPES[extname(b.coa_file)] || "application/octet-stream";
+  try {
+    const data = await readFile(join(UPLOADS, b.coa_file));
+    const name = `Jamivia-${String(b.code).replace(/[^\w.-]/g, "-")}-certificate${extname(b.coa_file)}`;
+    return sendRes(res, 200, method === "HEAD" ? "" : data, type, {
+      "Content-Disposition": `inline; filename="${name}"`, "Cache-Control": isAdmin ? "no-store" : "public, max-age=300" });
+  } catch { return sendRes(res, 404, "Not found"); }
 }
 
 function simplePage(title, body) {

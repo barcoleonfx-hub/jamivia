@@ -1,6 +1,7 @@
 // Admin dashboard at /admin: sales and waitlist metrics, subscribers, orders and dispatch, trade leads, email queue.
 import { one, all } from "./db.js";
 import { FLOWS } from "./mail.js";
+import { BACKOFFICE_CSS, customersPage, customerPage, stockPage, stockSummary, pickBatch } from "./backoffice.js";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const DAY = 86400e3;
@@ -50,13 +51,13 @@ input,select{font:inherit;padding:.6rem .9rem;border:1px solid var(--line);borde
 `;
 
 function shell(title, tab, body) {
-  const tabs = [["overview", "Overview"], ["orders", "Orders"], ["subscribers", "Waitlist"], ["trade", "Trade"], ["emails", "Emails"]];
+  const tabs = [["overview", "Overview"], ["orders", "Orders"], ["customers", "Customers"], ["stock", "Stock"], ["subscribers", "Waitlist"], ["trade", "Trade"], ["emails", "Emails"]];
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} · Jamivia Admin</title><meta name="robots" content="noindex">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Jost:wght@300;400&display=swap">
-<style>${CSS}</style></head><body>
+<style>${CSS}${BACKOFFICE_CSS}</style></head><body>
 <header class="top"><div class="in"><a class="wm" href="/admin">JAMIVIA<small>ADMIN</small></a>
-<nav class="tabs" aria-label="Sections">${tabs.map(([k, l]) => `<a href="/admin?tab=${k}" class="${k === tab ? "on" : ""}">${l}</a>`).join("")}</nav>
+<nav class="tabs" aria-label="Sections">${tabs.map(([k, l]) => `<a href="/admin?tab=${k}" class="${k === tab || (tab === "customer" && k === "customers") ? "on" : ""}">${l}</a>`).join("")}</nav>
 <form method="post" action="/admin/logout"><button>Sign out</button></form></div></header>
 <main>${body}</main></body></html>`;
 }
@@ -119,6 +120,7 @@ async function overview(params) {
   const [cur, prev] = await Promise.all([stats(from, now), stats(prevFrom, from)]);
   const totalSubs = await one("SELECT COUNT(*) AS n FROM subscribers WHERE status='subscribed'");
   const toDispatch = await one("SELECT COUNT(*) AS n FROM orders WHERE status='paid'");
+  const stock = await stockSummary();
 
   // daily series (London days approximated by UTC day buckets)
   const startDay = Math.floor(from / DAY) * DAY;
@@ -135,7 +137,7 @@ async function overview(params) {
     GROUP BY src ORDER BY visitors DESC LIMIT 8`, [from, from]);
   const devices = await all("SELECT device, COUNT(DISTINCT sid) AS n FROM events WHERE type='view' AND ts>=? GROUP BY device ORDER BY n DESC", [from]);
   const recentSubs = await all("SELECT email, first_name, source, created_at FROM subscribers ORDER BY created_at DESC LIMIT 6");
-  const recentOrders = await all("SELECT * FROM orders ORDER BY created_at DESC LIMIT 6");
+  const recentOrders = await all("SELECT o.*, b.code AS batch_code FROM orders o LEFT JOIN batches b ON b.id=o.batch_id ORDER BY o.created_at DESC LIMIT 6");
 
   const aov = cur.orders ? cur.revenue / cur.orders : 0;
   const funnel = [["Visitors", cur.visitors], ["Joined waitlist", cur.signups], ["Added to bag", cur.carts], ["Started checkout", cur.checkouts], ["Ordered", cur.orders]];
@@ -145,6 +147,7 @@ async function overview(params) {
   return `
 <div class="head"><div><span class="note">Last ${range} days</span><h1>Overview</h1></div>
 <div class="range">${[7, 30, 90].map((d) => `<a href="/admin?tab=overview&days=${d}" class="${d === range ? "on" : ""}">${d} days</a>`).join("")}</div></div>
+${stock.low ? `<p class="flash err" role="status">Low stock: ${n(stock.available)} tubs ready to sell, below your level of ${n(stock.threshold)}. <a href="/admin?tab=stock" style="color:inherit">Open stock →</a></p>` : ""}
 <section class="kpis">
   <div class="card kpi dark"><div class="l">Revenue</div><div class="v">${gbp(cur.revenue)}</div>${delta(cur.revenue, prev.revenue)}</div>
   <div class="card kpi"><div class="l">Orders</div><div class="v">${n(cur.orders)}</div>${delta(cur.orders, prev.orders)}</div>
@@ -171,26 +174,38 @@ async function overview(params) {
 }
 
 /* ---------------- orders ---------------- */
-function ordersTable(rows, actions) {
+function ordersTable(rows, actions, batches = []) {
   if (!rows.length) return `<p class="empty">No orders yet. They appear here as soon as Stripe checkout is connected and someone buys.</p>`;
-  return `<div class="scroll"><table><tr><th>Order</th><th>Date</th><th>Customer</th><th>Plan</th><th class="num">Qty</th><th class="num">Total</th><th>Status</th>${actions ? "<th>Ship to</th><th>Dispatch</th>" : ""}</tr>
+  return `<div class="scroll"><table><tr><th>Order</th><th>Date</th><th>Customer</th><th>Plan</th><th class="num">Qty</th><th class="num">Total</th><th>Status</th><th>Batch</th>${actions ? "<th>Ship to</th><th>Dispatch</th>" : ""}</tr>
 ${rows.map((o) => {
   let addr = "";
   try { const a = JSON.parse(o.address || "null"); if (a) addr = [a.line1, a.line2, a.city, a.postal_code].filter(Boolean).map(esc).join("<br>"); } catch {}
-  return `<tr><td>#${1000 + Number(o.id)}</td><td>${fmtDate(o.created_at)}</td><td>${esc(o.name)}<br><span class="note">${esc(o.email)}</span></td>
+  return `<tr><td>#${1000 + Number(o.id)}</td><td>${fmtDate(o.created_at)}</td><td>${o.email && o.email !== "deleted" ? `<a href="/admin?tab=customer&email=${encodeURIComponent(o.email)}">${esc(o.name || o.email)}</a>` : esc(o.name || "Deleted")}<br><span class="note">${esc(o.email)}</span></td>
 <td>${o.plan === "sub" ? "Subscription" : "One-time"}</td><td class="num">${n(o.qty)}</td><td class="num">${gbp(o.amount_pence)}</td>
 <td><span class="pill ${esc(o.status)}">${esc(o.status)}</span>${o.tracking ? `<br><span class="note">${esc(o.tracking)}</span>` : ""}</td>
-${actions ? `<td class="note">${addr || "—"}</td><td>${o.status === "paid" ? `<form method="post" action="/admin/orders/${Number(o.id)}/dispatch" class="tools" style="margin:0"><label class="sr" for="tr${o.id}">Tracking number</label><input id="tr${o.id}" name="tracking" placeholder="Tracking no." style="width:9rem"><button class="btn">Mark dispatched</button></form>` : fmtDate(o.dispatched_at)}</td>` : ""}</tr>`;
+<td>${o.batch_code ? `<a href="/admin?tab=stock#b-${esc(o.batch_code)}">${esc(o.batch_code)}</a>` : "—"}</td>
+${actions ? `<td class="note">${addr || "—"}</td><td>${o.status === "paid" ? `<form method="post" action="/admin/orders/${Number(o.id)}/dispatch" class="tools" style="margin:0"><label class="sr" for="tr${o.id}">Tracking number</label><input id="tr${o.id}" name="tracking" placeholder="Tracking no." style="width:9rem">${batchSelect(o, batches)}<button class="btn">Mark dispatched</button></form>` : fmtDate(o.dispatched_at)}</td>` : ""}</tr>`;
 }).join("")}</table></div>`;
+}
+
+// Batch picker for dispatch: released, in-date batches with enough left, earliest best-before first (pre-selected).
+function batchSelect(o, batches) {
+  if (!batches.length) return "";
+  const qty = Number(o.qty || 1);
+  const ok = batches.filter((b) => Number(b.remaining) >= qty);
+  return `<label class="sr" for="bt${o.id}">Batch</label><select id="bt${o.id}" name="batch_id">${ok.map((b, i) => `<option value="${Number(b.id)}" ${i === 0 ? "selected" : ""}>${esc(b.code)} · ${n(b.remaining)} left</option>`).join("")}<option value="">No batch (not tracked)</option></select>`;
 }
 
 async function orders(params) {
   const status = ["paid", "dispatched", "refunded"].includes(params.get("status")) ? params.get("status") : "";
-  const rows = await all(`SELECT * FROM orders ${status ? "WHERE status=?" : ""} ORDER BY created_at DESC LIMIT 300`, status ? [status] : []);
+  const rows = await all(`SELECT o.*, b.code AS batch_code FROM orders o LEFT JOIN batches b ON b.id=o.batch_id ${status ? "WHERE o.status=?" : ""} ORDER BY o.created_at DESC LIMIT 300`, status ? [status] : []);
+  const batches = await pickBatch(1);
+  const err = params.get("err");
   return `<div class="head"><h1>Orders</h1><div class="tools">
 <div class="range">${[["", "All"], ["paid", "To dispatch"], ["dispatched", "Dispatched"]].map(([k, l]) => `<a href="/admin?tab=orders${k ? "&status=" + k : ""}" class="${k === status ? "on" : ""}">${l}</a>`).join("")}</div>
 <a class="btn line" href="/admin/orders.csv">Export CSV</a></div></div>
-<section class="card">${ordersTable(rows, true)}</section>`;
+${err === "batch" ? `<p class="flash err" role="alert">That batch no longer has enough released stock for the order. Pick another batch.</p>` : ""}
+<section class="card">${ordersTable(rows, true, batches)}</section>`;
 }
 
 /* ---------------- subscribers ---------------- */
@@ -240,8 +255,9 @@ ${steps.map((s) => { const r = map.get(s.template) || {}; return `<tr><td>${esc(
 export async function renderAdmin(params, cfg) {
   const tab = params.get("tab") || "overview";
   const body = tab === "orders" ? await orders(params) : tab === "subscribers" ? await subscribers(params)
+    : tab === "customers" ? await customersPage(params) : tab === "customer" ? await customerPage(params) : tab === "stock" ? await stockPage(params)
     : tab === "trade" ? await trade() : tab === "emails" ? await emails(params, cfg) : await overview(params);
-  return shell({ orders: "Orders", subscribers: "Waitlist", trade: "Trade", emails: "Emails" }[tab] || "Overview", tab, body);
+  return shell({ orders: "Orders", customers: "Customers", customer: "Customer", stock: "Stock", subscribers: "Waitlist", trade: "Trade", emails: "Emails" }[tab] || "Overview", tab, body);
 }
 
 /* ---------------- CSV ---------------- */

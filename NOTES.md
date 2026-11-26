@@ -173,3 +173,9 @@ Priority order. **Owner** says who has to provide it.
   - A footnote says the ingredients are sourced worldwide. Claiming British ingredients would be misleading.
 - The manufacturer (G&G) is never named. Their spec says the label must not state their name or address.
 - **Confirm with G&G:** that blending, filling and sealing all happen at the East Grinstead site. If any step is subcontracted, adjust the wording.
+
+## Back office: customers and stock (added Nov 2026)
+- **Customers tab**: one list built from the waitlist, orders and trade enquiries, with segments, search, tags, notes, the email history, marketing opt-out, CSV export, and "Delete personal data" for privacy requests. Delete is blocked while the person has an order waiting to ship; orders are anonymised, not removed, so the accounts still add up.
+- **Stock tab**: record each delivery from G&G as a batch (code, tubs, made/best-before, certificate of analysis), with status In testing → Released (or Recalled). Adjustments for damaged stock, samples and counts. Low-stock level and days of cover. Warning when a batch is within 90 days of best-before.
+- **Dispatch** pre-selects the released, in-date batch with the earliest best-before and takes the tubs off it, so every order records which batch it shipped from (needed for a recall).
+- **Website batch lookup** calls `/api/batch`; released batches with a certificate link to `/coa/<code>`. Certificates are stored on the Render disk at `/var/data/uploads` (or `UPLOADS_DIR`).
