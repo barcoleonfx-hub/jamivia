@@ -179,3 +179,9 @@ Priority order. **Owner** says who has to provide it.
 - **Stock tab**: record each delivery from G&G as a batch (code, tubs, made/best-before, certificate of analysis), with status In testing → Released (or Recalled). Adjustments for damaged stock, samples and counts. Low-stock level and days of cover. Warning when a batch is within 90 days of best-before.
 - **Dispatch** pre-selects the released, in-date batch with the earliest best-before and takes the tubs off it, so every order records which batch it shipped from (needed for a recall).
 - **Website batch lookup** calls `/api/batch`; released batches with a certificate link to `/coa/<code>`. Certificates are stored on the Render disk at `/var/data/uploads` (or `UPLOADS_DIR`).
+
+## Stripe
+- Render env vars: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_SUB (£37.40 monthly recurring), STRIPE_PRICE_ONE (£44 one-off). Test mode first (sk_test_), then swap all four for live values.
+- Webhook: https://jamivia.onrender.com/api/stripe/webhook, events checkout.session.completed, checkout.session.async_payment_succeeded, invoice.paid, customer.subscription.deleted.
+- Renewals (invoice.paid, billing_reason subscription_cycle) create a new order to dispatch, using the first order's address. Cancellations mark the customer's subscription ended. Refunds are done in Stripe, then "Mark refunded" in Orders.
+- To do: turn on Stripe's customer portal so subscribers can cancel themselves, and put its link in the welcome email.
