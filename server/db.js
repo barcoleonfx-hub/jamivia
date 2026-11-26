@@ -114,6 +114,10 @@ const SCHEMA = [
 // Columns added after launch: added once, ignored if they already exist.
 const COLUMNS = [
   ["orders", "batch_id", "INTEGER"],
+  ["orders", "stripe_customer", "TEXT"],
+  ["orders", "stripe_subscription", "TEXT"],
+  ["orders", "sub_ended_at", "INTEGER"],
+  ["orders", "refunded_at", "INTEGER"],
 ];
 
 export async function migrate() {

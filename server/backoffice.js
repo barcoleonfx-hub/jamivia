@@ -60,7 +60,7 @@ SELECT p.email,
   (SELECT MAX(created_at) FROM orders o WHERE o.email=p.email) AS last_order,
   (SELECT MIN(created_at) FROM orders o WHERE o.email=p.email) AS first_order,
   (SELECT name FROM orders o WHERE o.email=p.email AND name != '' ORDER BY created_at DESC LIMIT 1) AS order_name,
-  EXISTS(SELECT 1 FROM orders o WHERE o.email=p.email AND o.plan='sub' AND o.status!='refunded') AS is_sub,
+  EXISTS(SELECT 1 FROM orders o WHERE o.email=p.email AND o.plan='sub' AND o.status!='refunded' AND o.sub_ended_at IS NULL) AS is_sub,
   EXISTS(SELECT 1 FROM trade_leads t WHERE t.email=p.email) AS is_trade,
   (SELECT MIN(created_at) FROM trade_leads t WHERE t.email=p.email) AS trade_at,
   m.tags
@@ -140,7 +140,8 @@ export async function customerPage(params) {
   const notes = await all("SELECT * FROM customer_notes WHERE email=? ORDER BY created_at DESC", [email]);
   const jobs = await all("SELECT * FROM email_jobs WHERE email=? ORDER BY COALESCE(sent_at, send_at) DESC LIMIT 60", [email]);
   const sub = await one("SELECT * FROM subscribers WHERE email=?", [email]);
-  const subOrders = orders.filter((o) => o.plan === "sub" && o.status !== "refunded");
+  const subOrders = orders.filter((o) => o.plan === "sub" && o.status !== "refunded" && !o.sub_ended_at);
+  const subEnded = orders.find((o) => o.plan === "sub" && o.sub_ended_at);
   const flash = params.get("done");
   const errs = { confirm: "Type DELETE in capitals to confirm.", open: "This person has an order waiting to be dispatched. Dispatch or refund it first, then delete their data." };
   const msgs = { note: "Note added.", tags: "Tags saved.", unsub: "Unsubscribed from marketing emails. Queued emails were cancelled.", resub: "Resubscribed to launch emails.", noteDel: "Note deleted." };
@@ -152,7 +153,7 @@ export async function customerPage(params) {
 ${flash && msgs[flash] ? `<p class="flash" role="status">${msgs[flash]}</p>` : ""}${flash && errs[flash] ? `<p class="flash err" role="alert">${errs[flash]}</p>` : ""}
 <section class="kpis">
   <div class="card kpi dark"><div class="l">Total spent</div><div class="v">${gbp(c.spent)}</div><span class="d">${n(c.orders)} order${Number(c.orders) === 1 ? "" : "s"}</span></div>
-  <div class="card kpi"><div class="l">Subscription</div><div class="v" style="font-size:1.9rem">${subOrders.length ? "Active" : "None"}</div><span class="d">${subOrders.length ? `Since ${fmtDay(subOrders[subOrders.length - 1].created_at)}` : "One-time or not yet ordered"}</span></div>
+  <div class="card kpi"><div class="l">Subscription</div><div class="v" style="font-size:1.9rem">${subOrders.length ? "Active" : "None"}</div><span class="d">${subOrders.length ? `Since ${fmtDay(subOrders[subOrders.length - 1].created_at)}` : subEnded ? `Cancelled ${fmtDay(subEnded.sub_ended_at)}` : "One-time or not yet ordered"}</span></div>
   <div class="card kpi"><div class="l">Marketing emails</div><div class="v" style="font-size:1.9rem">${sub ? (sub.status === "subscribed" ? "Opted in" : "Opted out") : "Not on list"}</div><span class="d">${sub ? `Joined ${fmtDay(sub.created_at)} · ${esc(sub.source || "website")}` : "Never joined the waitlist"}</span></div>
   <div class="card kpi"><div class="l">Last order</div><div class="v" style="font-size:1.9rem">${c.last_order ? fmtDay(c.last_order) : "—"}</div><span class="d">${c.first_order ? `First order ${fmtDay(c.first_order)}` : "No orders yet"}</span></div>
 </section>

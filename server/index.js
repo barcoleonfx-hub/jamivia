@@ -179,6 +179,7 @@ async function handle(req, res) {
       success_url: origin + "/?order=success", cancel_url: origin + "/#shop",
       "shipping_address_collection[allowed_countries][0]": "GB",
       "metadata[plan]": plan, "metadata[qty]": String(qty),
+      ...(plan === "sub" ? { "subscription_data[metadata][plan]": "sub", "subscription_data[metadata][qty]": String(qty) } : { customer_creation: "always" }),
       allow_promotion_codes: "true", billing_address_collection: "auto",
     };
     if (EMAIL_RE.test(email)) params.customer_email = email;
@@ -195,19 +196,40 @@ async function handle(req, res) {
     const raw = (await readBody(req, 500_000)).toString("utf8");
     if (!verifyStripe(raw, req.headers["stripe-signature"])) return sendRes(res, 400, "bad signature");
     const evt = JSON.parse(raw);
-    if (evt.type === "checkout.session.completed") {
+    const idOf = (v) => (v && typeof v === "object" ? v.id : v) || null;
+    if (evt.type === "checkout.session.completed" || evt.type === "checkout.session.async_payment_succeeded") {
       const s = evt.data.object;
+      if (s.payment_status === "unpaid") return json(res, 200, { received: true }); // delayed payment methods: wait for async_payment_succeeded
       const email = (s.customer_details?.email || s.customer_email || "").toLowerCase();
       const ship = s.collected_information?.shipping_details || s.shipping_details || null;
       const plan = s.metadata?.plan || (s.mode === "subscription" ? "sub" : "one");
       const r = await run(
-        "INSERT OR IGNORE INTO orders (stripe_session, email, name, plan, qty, amount_pence, currency, address, created_at) VALUES (?,?,?,?,?,?,?,?,?)",
+        "INSERT OR IGNORE INTO orders (stripe_session, email, name, plan, qty, amount_pence, currency, address, created_at, stripe_customer, stripe_subscription) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
         [s.id, email, ship?.name || s.customer_details?.name || "", plan, Number(s.metadata?.qty || 1), s.amount_total || 0,
-         (s.currency || "gbp").toUpperCase(), ship ? JSON.stringify(ship.address) : null, Date.now()]);
+         (s.currency || "gbp").toUpperCase(), ship ? JSON.stringify(ship.address) : null, Date.now(), idOf(s.customer), idOf(s.subscription)]);
       if (r.rowsAffected && email) {
         await cancel(email, "basket");
         await queue(email, "welcome", Date.now(), { plan, firstName: (ship?.name || s.customer_details?.name || "").split(" ")[0] });
       }
+    }
+    // Each monthly renewal becomes a new order to dispatch, shipped to the address from the first order.
+    if (evt.type === "invoice.paid" || evt.type === "invoice.payment_succeeded") {
+      const inv = evt.data.object;
+      const subId = idOf(inv.subscription) || idOf(inv.parent?.subscription_details?.subscription);
+      if (inv.billing_reason === "subscription_cycle" && subId) {
+        const first = await one("SELECT * FROM orders WHERE stripe_subscription=? ORDER BY created_at ASC LIMIT 1", [subId]);
+        const last = await one("SELECT * FROM orders WHERE stripe_subscription=? ORDER BY created_at DESC LIMIT 1", [subId]);
+        const ship = inv.customer_shipping;
+        const qty = (inv.lines?.data || []).reduce((a, l) => a + Number(l.quantity || 0), 0) || Number(first?.qty || 1);
+        await run(
+          "INSERT OR IGNORE INTO orders (stripe_session, email, name, plan, qty, amount_pence, currency, address, created_at, stripe_customer, stripe_subscription) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+          [inv.id, (inv.customer_email || last?.email || "").toLowerCase(), ship?.name || last?.name || inv.customer_name || "", "sub", qty, inv.amount_paid || 0,
+           (inv.currency || "gbp").toUpperCase(), ship?.address ? JSON.stringify(ship.address) : last?.address || null, Date.now(), idOf(inv.customer), subId]);
+      }
+    }
+    if (evt.type === "customer.subscription.deleted") {
+      const sub = evt.data.object;
+      await run("UPDATE orders SET sub_ended_at=? WHERE stripe_subscription=? AND sub_ended_at IS NULL", [Date.now(), sub.id]);
     }
     return json(res, 200, { received: true });
   }
@@ -271,6 +293,11 @@ async function handle(req, res) {
       const r = await dispatchFromBatch(order.id, Number(f.batch_id) || 0, Number(order.qty || 1), now);
       if (!r.ok) return redirect(res, "/admin?tab=orders&err=batch");
       await run("UPDATE orders SET status='dispatched', tracking=?, dispatched_at=? WHERE id=?", [clean(f.tracking, 60) || null, now, order.id]);
+      return redirect(res, "/admin?tab=orders");
+    }
+    const rf = path.match(/^\/admin\/orders\/(\d+)\/refunded$/);
+    if (rf && method === "POST") {
+      await run("UPDATE orders SET status='refunded', refunded_at=? WHERE id=? AND status!='refunded'", [Date.now(), Number(rf[1])]);
       return redirect(res, "/admin?tab=orders");
     }
     const cm = path.match(/^\/admin\/customers\/(note|note-delete|tags|unsubscribe|resubscribe|erase)$/);

@@ -184,7 +184,8 @@ ${rows.map((o) => {
 <td>${o.plan === "sub" ? "Subscription" : "One-time"}</td><td class="num">${n(o.qty)}</td><td class="num">${gbp(o.amount_pence)}</td>
 <td><span class="pill ${esc(o.status)}">${esc(o.status)}</span>${o.tracking ? `<br><span class="note">${esc(o.tracking)}</span>` : ""}</td>
 <td>${o.batch_code ? `<a href="/admin?tab=stock#b-${esc(o.batch_code)}">${esc(o.batch_code)}</a>` : "—"}</td>
-${actions ? `<td class="note">${addr || "—"}</td><td>${o.status === "paid" ? `<form method="post" action="/admin/orders/${Number(o.id)}/dispatch" class="tools" style="margin:0"><label class="sr" for="tr${o.id}">Tracking number</label><input id="tr${o.id}" name="tracking" placeholder="Tracking no." style="width:9rem">${batchSelect(o, batches)}<button class="btn">Mark dispatched</button></form>` : fmtDate(o.dispatched_at)}</td>` : ""}</tr>`;
+${actions ? `<td class="note">${addr || "—"}</td><td>${o.status === "paid" ? `<form method="post" action="/admin/orders/${Number(o.id)}/dispatch" class="tools" style="margin:0"><label class="sr" for="tr${o.id}">Tracking number</label><input id="tr${o.id}" name="tracking" placeholder="Tracking no." style="width:9rem">${batchSelect(o, batches)}<button class="btn">Mark dispatched</button></form>` : o.status === "refunded" ? "—" : fmtDate(o.dispatched_at)}
+${o.status !== "refunded" ? `<form method="post" action="/admin/orders/${Number(o.id)}/refunded" style="margin-top:.4rem" onsubmit="return confirm('Mark order #${1000 + Number(o.id)} as refunded? Refund the money in Stripe first.')"><button class="note" style="background:none;border:0;padding:0;cursor:pointer;text-decoration:underline">Mark refunded</button></form>` : ""}</td>` : ""}</tr>`;
 }).join("")}</table></div>`;
 }
 
