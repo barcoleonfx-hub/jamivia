@@ -201,3 +201,10 @@ Priority order. **Owner** says who has to provide it.
 - "The Jamivia Approach" text is in the philosophy section; "Nothing excessive. Everything intentional." added.
 - The nav and seal monogram use the final logo shape.
 - **Not changed yet:** the formula (N-Acetyl Glucosamine) and the hero/shop jar image, which still shows the old label. The client makes jar images in Gemini; the updated prompt is in PROMPTS.md. Cut the new image out to a transparent background and replace img/jamivia-jar.webp (1424×1133).
+
+## Company details and policies (27 Nov 2026)
+- Jamivia Ltd, company no. 17418145, registered in England and Wales. Contact hello@jamivia.com. Instagram @jamivia.uk.
+- New `terms.html`: delivery (free UK, dispatch in 1 working day, tracked), subscriptions (30-day cycle, cancel any time by email, 2 working days' notice), 14-day returns of unopened tubs, faulty items, liability, law.
+- Footer, privacy and email footers now carry the company name, number and email. The "placeholders" line is gone.
+- **Registered office address still to add** (required on the website by the Companies Act). Search `<!--ADDRESS` in index.html, privacy.html and terms.html.
+- Assumptions for the client to confirm: delivery free on all UK orders (checkout charges no shipping), Royal Mail tracked or similar, cancellations by email until the Stripe customer portal is turned on.
