@@ -185,3 +185,11 @@ Priority order. **Owner** says who has to provide it.
 - Webhook: https://jamivia.onrender.com/api/stripe/webhook, events checkout.session.completed, checkout.session.async_payment_succeeded, invoice.paid, customer.subscription.deleted.
 - Renewals (invoice.paid, billing_reason subscription_cycle) create a new order to dispatch, using the first order's address. Cancellations mark the customer's subscription ended. Refunds are done in Stripe, then "Mark refunded" in Orders.
 - To do: turn on Stripe's customer portal so subscribers can cancel themselves, and put its link in the welcome email.
+
+## Client packaging brief (27 Nov 2026), status
+- Design direction from the earlier mock-up is approved. Matte finish, no metallics, minimal, typography-led. Logo follows the mock-up; we owe the final vector files.
+- Jar: G&G 1000ml white HDPE. Need G&G's label dieline (height × wrap length, overlap, bleed).
+- **Formula change:** the client lists **N-Acetyl Glucosamine 1,000mg**, which is not in JMV02. The final G&G spec (Word) will confirm zinc and carnosine amounts. The website still shows JMV02 (6 ingredients, 11.6 g scoop): update it once the spec lands. Check NAG's source (often shellfish, so a crustacean allergen) and its novel-food status with G&G.
+- Usage: half a scoop daily, building to one scoop, mixed with water. Water volume to be confirmed by G&G. The website's directions need to match.
+- Requested benefit areas (gut integrity, barrier, microbiome, digestive health) are **not authorised claims** in GB. Only zinc claims and a "high in fibre" nutrition claim are usable. A compliant claims sheet is still to be done. Get regulatory sign-off before print.
+- Still to come from the client: postal address, customer service email, net weight, serving weight, feature confirmations, GS1 barcode. Instagram: @jamivia.uk.
