@@ -206,5 +206,5 @@ Priority order. **Owner** says who has to provide it.
 - Jamivia Ltd, company no. 17418145, registered in England and Wales. Contact hello@jamivia.com. Instagram @jamivia.uk.
 - New `terms.html`: delivery (free UK, dispatch in 1 working day, tracked), subscriptions (30-day cycle, cancel any time by email, 2 working days' notice), 14-day returns of unopened tubs, faulty items, liability, law.
 - Footer, privacy and email footers now carry the company name, number and email. The "placeholders" line is gone.
-- **Registered office address still to add** (required on the website by the Companies Act). Search `<!--ADDRESS` in index.html, privacy.html and terms.html.
+- Registered office: 271 Preston Road, Harrow, HA3 0PS (on footer, privacy, terms, emails).
 - Assumptions for the client to confirm: delivery free on all UK orders (checkout charges no shipping), Royal Mail tracked or similar, cancellations by email until the Stripe customer portal is turned on.
