@@ -53,7 +53,7 @@ def signoff(note=""):
 
 def wrap(subject, preheader, body, show_jar=True):
     jar = (f'<tr><td align="center" style="background:{GREEN};padding:6px 32px 0;">'
-           f'<img src="{JAR}" width="260" alt="Jamivia Daily Gut Formula jar" style="display:block;width:260px;max-width:70%;height:auto;"></td></tr>') if show_jar else ""
+           f'<img src="{JAR}" width="260" alt="Jamivia The Foundation Formula jar" style="display:block;width:260px;max-width:70%;height:auto;"></td></tr>') if show_jar else ""
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="x-apple-disable-message-reformatting"><title>{html.escape(subject)}</title>
@@ -65,7 +65,7 @@ def wrap(subject, preheader, body, show_jar=True):
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:{PAPER};border-radius:22px;overflow:hidden;">
   <tr><td align="center" style="background:{GREEN};padding:30px 32px 22px;">
     <div style="font-family:{SERIF};font-size:30px;letter-spacing:10px;color:#EEEBE1;padding-left:10px;">JAMIVIA</div>
-    <div style="font-family:{SANS};font-size:10px;letter-spacing:3.5px;text-transform:uppercase;color:{GOLD};margin-top:6px;">Daily Gut Formula</div>
+    <div style="font-family:{SANS};font-size:10px;letter-spacing:3.5px;text-transform:uppercase;color:{GOLD};margin-top:6px;">The Foundation Formula</div>
   </td></tr>
   {jar}
   <tr><td style="padding:40px 40px 18px;">{body}</td></tr>
@@ -102,24 +102,24 @@ EMAILS = [
   dict(file="waitlist-3-formula", flow="Waitlist", timing="Day 7",
        subject="Every milligram, on the label", preheader="The full formula, with nothing hidden.",
        body=h("Six ingredients. Nothing hidden.") +
-         p(f"Hi {NAME}, here is exactly what's in every 11.6 g scoop of Restore:") +
+         p(f"Hi {NAME}, here is exactly what's in every 11.6 g scoop of Jamivia:") +
          box("Per 11.6 g scoop", SCOOP) +
-         p("Zinc contributes to the normal function of the immune system and has a role in the process of cell division.") +
+         p("Zinc contributes to normal protein synthesis and has a role in the process of cell division.") +
          p("No artificial sweeteners, flavourings or colours, and no excipients. The guar fibre dissolves almost clear and the glycine adds a light natural sweetness, so it takes on the taste of whatever you mix it into.") +
          btn("Explore the formula", SITE + "#inside") + signoff()),
   dict(file="waitlist-4-launch", flow="Waitlist", timing="Launch day (one-off campaign)",
-       subject="It's here: Jamivia Restore is live", preheader="First access for the waitlist, before we tell anyone else.",
+       subject="It's here: Jamivia is live", preheader="First access for the waitlist, before we tell anyone else.",
        body=h(f"{NAME}, it's ready.") +
-         p("The first production batch of Jamivia Restore has arrived, and as promised, you're hearing about it first.") +
+         p("The first production batch of Jamivia has arrived, and as promised, you're hearing about it first.") +
          p("[Launch offer, e.g. waitlist price or free gift. Client to confirm.]") +
-         btn("Shop Restore", SITE + "#shop") +
+         btn("Shop Jamivia", SITE + "#shop") +
          p("Subscribers get a fresh tub every 30 days and can pause or cancel any time.") + signoff()),
   # ---------------- ABANDONED BASKET ----------------
   dict(file="basket-1-reminder", flow="Abandoned basket", timing="1 hour after leaving checkout",
-       subject="Your Restore is waiting", preheader="We saved your basket for you.",
+       subject="Your Jamivia is waiting", preheader="We saved your basket for you.",
        body=h("Still thinking it over?") +
-         p(f"Hi {NAME}, you left Jamivia Restore in your basket. We've kept it for you.") +
-         box("In your basket", [("Jamivia Restore &middot; 348 g", "{{ event.ItemPrice|default:'' }}"), ("Servings", "30"), ("Delivery", "Free UK delivery on subscriptions")]) +
+         p(f"Hi {NAME}, you left Jamivia in your basket. We've kept it for you.") +
+         box("In your basket", [("Jamivia &middot; 348 g", "{{ event.ItemPrice|default:'' }}"), ("Servings", "30"), ("Delivery", "Free UK delivery on subscriptions")]) +
          btn("Return to your basket", SITE + "#shop") +
          p("Questions before you buy? Just reply. A real person reads every message.")),
   dict(file="basket-2-questions", flow="Abandoned basket", timing="24 hours later (if still no order)",
@@ -127,7 +127,7 @@ EMAILS = [
        body=h("Before you decide.") +
          p(f"Hi {NAME}, these are the questions we hear most:") +
          steps([("What does it taste like?", "Close to neutral. No sweeteners or flavourings, so it takes on the taste of whatever you mix it into."),
-                ("How do I start?", "Half a scoop a day for the first week, then a full scoop. Stir into 200–250 ml of water or a cold drink."),
+                ("How do I start?", "Start with half a scoop daily, gradually increasing to one full scoop as tolerated. Stir into 200–250 ml of water or a cold drink."),
                 ("What's in it?", "Six ingredients, every dose on the label: L-glutamine, PHGG, glycine, taurine, L-carnosine and zinc.")]) +
          btn("Complete your order", SITE + "#shop") + signoff()),
   dict(file="basket-3-founder", flow="Abandoned basket", timing="72 hours later (final)",
@@ -142,15 +142,15 @@ EMAILS = [
        subject="How to start with Jamivia", preheader="Thirty seconds, once a day. Here's the routine.",
        body=h(f"Welcome to Jamivia, {NAME}.") +
          p("Thank you for your order. Here's how to get the most from your first tub:") +
-         steps([("Start gently", "Take half a scoop a day for the first week."),
+         steps([("Start gently", "Start with half a scoop daily, gradually increasing to one full scoop as tolerated."),
                 ("Stir, don't heat", "Mix into 200–250 ml of water or your usual cold drink. Not into hot drinks."),
                 ("Keep it consistent", "Same time each day. Consistency matters more than timing.")]) +
          p("Your batch number is printed on the base of the tub. You'll be able to look up its certificate of analysis on our website.") +
          btn("View the daily ritual", SITE + "#top") + signoff("Any questions at all, just reply.")),
   dict(file="welcome-2-full-scoop", flow="Post-purchase welcome", timing="Day 7",
-       subject="Time to move up to a full scoop", preheader="Week one done. Here's what's next.",
-       body=h("Week one, done.") +
-         p(f"Hi {NAME}, you've had a week of half scoops. If it's suited you, today's the day to move up to the full scoop: about 11.6 g, one level scoop.") +
+       subject="Building up to a full scoop", preheader="One week in. Here's what's next.",
+       body=h("One week in.") +
+         p(f"Hi {NAME}, you've been starting with half scoops. When it suits you, build up gradually to one full scoop a day: about 11.6 g, one level scoop. There's no rush, so go at your own pace.") +
          box("Your full daily scoop", SCOOP) +
          p("Tip: keep the tub somewhere you'll see it every morning, next to the kettle or your water glass. It's the easiest way to make it a habit.") +
          p("How are you finding the taste and the routine? Reply and let me know. Your feedback shapes what we do next.") + signoff()),
@@ -159,7 +159,7 @@ EMAILS = [
        body=h("Running low?") +
          p(f"Hi {NAME}, if you've been taking Jamivia daily, you've got roughly a week left in your tub.") +
          p("To keep your routine going without a gap, reorder now, or switch to a subscription: a fresh tub every 30 days, free UK delivery, pause or cancel any time.") +
-         btn("Reorder Restore", SITE + "#shop") +
+         btn("Reorder Jamivia", SITE + "#shop") +
          p("Already reordered? Thank you. Ignore this one.") + signoff()),
 ]
 

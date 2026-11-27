@@ -193,3 +193,11 @@ Priority order. **Owner** says who has to provide it.
 - Usage: half a scoop daily, building to one scoop, mixed with water. Water volume to be confirmed by G&G. The website's directions need to match.
 - Requested benefit areas (gut integrity, barrier, microbiome, digestive health) are **not authorised claims** in GB. Only zinc claims and a "high in fibre" nutrition claim are usable. A compliant claims sheet is still to be done. Get regulatory sign-off before print.
 - Still to come from the client: postal address, customer service email, net weight, serving weight, feature confirmations, GS1 barcode. Instagram: @jamivia.uk.
+
+## Website copy brought in line with the label (27 Nov 2026)
+- Product is now **JAMIVIA · The Foundation Formula** (no more "Restore", which implied repair). The legal name "L-Glutamine & PHGG Fibre Complex with Amino Acids & Zinc" is in the shop section.
+- Zinc claim switched to protein synthesis + cell division (site, journal, emails).
+- Directions: start with half a scoop daily, increasing to one full scoop as tolerated (site, emails; the day-7 email no longer pushes a full scoop).
+- "The Jamivia Approach" text is in the philosophy section; "Nothing excessive. Everything intentional." added.
+- The nav and seal monogram use the final logo shape.
+- **Not changed yet:** the formula (N-Acetyl Glucosamine) and the hero/shop jar image, which still shows the old label. The client makes jar images in Gemini; the updated prompt is in PROMPTS.md. Cut the new image out to a transparent background and replace img/jamivia-jar.webp (1424×1133).

@@ -48,7 +48,7 @@ ARTICLES = [
 <h2>Every dose on the label</h2>
 <p>Many supplements group their ingredients into a blend and print one total weight, so you cannot tell how much of each you are getting. Every amount in Jamivia is printed separately, from 4.99 g of glutamine down to 59 mg of carnosine.</p>
 <h2>Made to be taken every day</h2>
-<p>Jamivia isn't a protocol or a 14-day plan. It is one scoop a day in water, starting with half a scoop for the first week. Zinc contributes to the normal function of the immune system, and each scoop gives 16 mg, 160% of the nutrient reference value.</p>
+<p>Jamivia isn't a protocol or a 14-day plan. It is one scoop a day in water: start with half a scoop daily and build up to a full scoop as tolerated. Each scoop gives 16 mg of zinc, 160% of the nutrient reference value. Zinc contributes to normal protein synthesis and has a role in the process of cell division.</p>
 <h2>Made where we can see it</h2>
 <p>Every tub is blended, packed and sealed in England, and every batch carries a number that traces it back through manufacture. Probiotics and other products have their place. Jamivia was simply built to be the plain, transparent foundation underneath whatever else you choose.</p>
 """),
@@ -116,7 +116,7 @@ def page(a, others):
 <article>{a["body"]}<a class="cta" href="../index.html#inside">See the six ingredients →</a></article>
 <p class="note">This article is for general information. It is not medical advice. Food supplements should not be used as a substitute for a varied and balanced diet and a healthy lifestyle.</p>
 <section class="more"><div class="in"><h2>Keep reading</h2><div class="cards">{cards}</div></div></section>
-<footer><div class="in">© 2026 Jamivia · Daily Gut Formula · Made in Britain</div></footer>
+<footer><div class="in">© 2026 Jamivia · The Foundation Formula · Made in Britain</div></footer>
 </body></html>'''
 
 def main():
